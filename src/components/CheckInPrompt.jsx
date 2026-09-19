@@ -1,5 +1,5 @@
 /**
- * SafeSignal - CheckInPrompt (Full Anti-Coercion Retry Pipeline)
+ * Aurora - CheckInPrompt (Full Anti-Coercion Retry Pipeline)
  * 
  * DESIGN PRINCIPLES:
  * 1. Default-Secure: Only exact safe word stands down the alert.

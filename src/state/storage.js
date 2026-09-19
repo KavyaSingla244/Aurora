@@ -1,21 +1,27 @@
 /**
- * LocalStorage Helpers for SafeSignal (On-device persistence)
+ * LocalStorage Helpers for Aurora (On-device persistence)
  * Core Design Principle 1: No server / No database — all state persists strictly in browser localStorage.
  */
 
 const STORAGE_KEYS = {
-  SAFE_WORD: 'safesignal_safe_word',
-  ONBOARDED: 'safesignal_onboarded',
-  MODE: 'safesignal_mode',
-  TRUSTED_CIRCLE: 'safesignal_circle',
-  FAMILIAR_PLACES: 'safesignal_places',
-  SETTINGS: 'safesignal_settings'
+  SAFE_WORD: 'aurora_safe_word',
+  ONBOARDED: 'aurora_onboarded',
+  MODE: 'aurora_mode',
+  TRUSTED_CIRCLE: 'aurora_circle',
+  FAMILIAR_PLACES: 'aurora_places',
+  SETTINGS: 'aurora_settings',
+  // Legacy fallback keys
+  LEGACY_SAFE_WORD: 'safesignal_safe_word',
+  LEGACY_ONBOARDED: 'safesignal_onboarded',
+  LEGACY_MODE: 'safesignal_mode',
+  LEGACY_TRUSTED_CIRCLE: 'safesignal_circle',
+  LEGACY_FAMILIAR_PLACES: 'safesignal_places'
 };
 
 export const storage = {
   getSafeWord: () => {
     try {
-      return localStorage.getItem(STORAGE_KEYS.SAFE_WORD) || '';
+      return localStorage.getItem(STORAGE_KEYS.SAFE_WORD) || localStorage.getItem(STORAGE_KEYS.LEGACY_SAFE_WORD) || '';
     } catch {
       return '';
     }
@@ -32,7 +38,7 @@ export const storage = {
 
   isOnboarded: () => {
     try {
-      return localStorage.getItem(STORAGE_KEYS.ONBOARDED) === 'true';
+      return localStorage.getItem(STORAGE_KEYS.ONBOARDED) === 'true' || localStorage.getItem(STORAGE_KEYS.LEGACY_ONBOARDED) === 'true';
     } catch {
       return false;
     }
@@ -40,7 +46,7 @@ export const storage = {
 
   getMode: () => {
     try {
-      return localStorage.getItem(STORAGE_KEYS.MODE) || 'Solo';
+      return localStorage.getItem(STORAGE_KEYS.MODE) || localStorage.getItem(STORAGE_KEYS.LEGACY_MODE) || 'Solo';
     } catch {
       return 'Solo';
     }
@@ -56,7 +62,7 @@ export const storage = {
 
   getTrustedCircle: () => {
     try {
-      const data = localStorage.getItem(STORAGE_KEYS.TRUSTED_CIRCLE);
+      const data = localStorage.getItem(STORAGE_KEYS.TRUSTED_CIRCLE) || localStorage.getItem(STORAGE_KEYS.LEGACY_TRUSTED_CIRCLE);
       return data ? JSON.parse(data) : [];
     } catch {
       return [];
@@ -73,7 +79,7 @@ export const storage = {
 
   getFamiliarPlaces: () => {
     try {
-      const data = localStorage.getItem(STORAGE_KEYS.FAMILIAR_PLACES);
+      const data = localStorage.getItem(STORAGE_KEYS.FAMILIAR_PLACES) || localStorage.getItem(STORAGE_KEYS.LEGACY_FAMILIAR_PLACES);
       return data ? JSON.parse(data) : [];
     } catch {
       return [];
@@ -95,6 +101,11 @@ export const storage = {
       localStorage.removeItem(STORAGE_KEYS.MODE);
       localStorage.removeItem(STORAGE_KEYS.TRUSTED_CIRCLE);
       localStorage.removeItem(STORAGE_KEYS.FAMILIAR_PLACES);
+      localStorage.removeItem(STORAGE_KEYS.LEGACY_SAFE_WORD);
+      localStorage.removeItem(STORAGE_KEYS.LEGACY_ONBOARDED);
+      localStorage.removeItem(STORAGE_KEYS.LEGACY_MODE);
+      localStorage.removeItem(STORAGE_KEYS.LEGACY_TRUSTED_CIRCLE);
+      localStorage.removeItem(STORAGE_KEYS.LEGACY_FAMILIAR_PLACES);
     } catch {
       // Graceful fallback
     }

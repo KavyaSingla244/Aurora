@@ -165,7 +165,7 @@ export default function OnboardingSetup() {
         {/* Header */}
         <div className="modal-header">
           <div className="shield-badge">🛡️</div>
-          <h2>{isOnboarded ? 'Security & Sharing Settings' : 'Setup SafeSignal'}</h2>
+          <h2>{isOnboarded ? 'Security & Sharing Settings' : 'Setup Aurora'}</h2>
           <div className="step-indicator">
             <span className={`step-dot ${step === 1 ? 'active' : 'done'}`}>1. Safe Word</span>
             <span className="step-line" />
@@ -329,7 +329,7 @@ export default function OnboardingSetup() {
                   ← Back
                 </button>
                 <button type="submit" className="btn-primary-action">
-                  {isOnboarded ? 'Save Settings' : 'Arm SafeSignal'}
+                  {isOnboarded ? 'Save Settings' : 'Arm Aurora'}
                 </button>
               </div>
             </form>

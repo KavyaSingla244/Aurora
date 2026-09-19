@@ -1,6 +1,6 @@
 {
-  "name": "SafeSignal — Composite Risk Safety App",
-  "short_name": "SafeSignal",
+  "name": "Aurora — Composite Risk Safety App",
+  "short_name": "Aurora",
   "description": "Multi-signal personal safety guardian with real-time composite risk scoring, silent escalation, and anti-coercion stand-down.",
   "start_url": "/",
   "display": "standalone",

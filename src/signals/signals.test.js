@@ -1,5 +1,5 @@
 /**
- * SafeSignal - Real Signals & Telemetry Sourcing Test Suite
+ * Aurora - Real Signals & Telemetry Sourcing Test Suite
  * Validates mathematical formulas, threshold constants, and fallback behaviors.
  */
 
@@ -19,7 +19,7 @@ import { INSTANT_DROP_PERCENT_THRESHOLD, LOW_BATTERY_THRESHOLD } from './useBatt
 import { calculateRiskScore } from '../engine/riskScore.js';
 
 console.log('='.repeat(80));
-console.log('SAFESIGNAL - REAL BROWSER SIGNALS & KINEMATICS TEST SUITE');
+console.log('AURORA - REAL BROWSER SIGNALS & KINEMATICS TEST SUITE');
 console.log('='.repeat(80));
 
 // 1. TIME OF DAY CONSTANTS & DERIVATION LOGIC

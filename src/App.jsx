@@ -48,7 +48,7 @@ function MainAppContent() {
                 <span className="logo-halo" />
               </div>
               <div>
-                <h1 className="brand-title">SafeSignal</h1>
+                <h1 className="brand-title">Aurora</h1>
                 <span className="brand-subtitle">Personal Guardian AI</span>
               </div>
             </div>

@@ -1,5 +1,5 @@
 /**
- * SafeSignal - Composite Risk Scoring Engine
+ * Aurora - Composite Risk Scoring Engine
  * 
  * DESIGN PRINCIPLES:
  * - Pure functions only: Zero DOM, zero React state, zero external dependencies.

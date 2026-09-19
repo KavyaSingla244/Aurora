@@ -1,5 +1,5 @@
 /**
- * SafeSignal - Complete Pipeline & Sharing Model Test Suite
+ * Aurora - Complete Pipeline & Sharing Model Test Suite
  * 
  * Validates:
  * 1. Safe word setup & localStorage persistence
@@ -23,7 +23,7 @@ global.localStorage = {
 };
 
 console.log('='.repeat(80));
-console.log('SAFESIGNAL - PIPELINE, SHARING MODEL & CIRCLE NOTIFICATION TEST');
+console.log('AURORA - PIPELINE, SHARING MODEL & CIRCLE NOTIFICATION TEST');
 console.log('='.repeat(80));
 
 // Flow 1: Safe Word & Sharing Setup Persistence

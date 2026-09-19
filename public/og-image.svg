@@ -42,7 +42,7 @@
   </g>
 
   <!-- Title and Description -->
-  <text x="360" y="240" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="64" fill="url(#textGrad)" letter-spacing="-1.5">SafeSignal</text>
+  <text x="360" y="240" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="64" fill="url(#textGrad)" letter-spacing="-1.5">Aurora</text>
   
   <text x="360" y="300" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="28" fill="#38bdf8">Personal Guardian AI • Composite Risk Safety Engine</text>
   

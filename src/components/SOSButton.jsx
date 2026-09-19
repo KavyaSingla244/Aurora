@@ -1,5 +1,5 @@
 /**
- * SafeSignal - Emergency SOS Component
+ * Aurora - Emergency SOS Component
  * 
  * DESIGN PRINCIPLES:
  * 1. Independent & Always-Available: Fixed red SOS trigger accessible regardless of current tier or pipeline state.

@@ -1,13 +1,14 @@
-# SafeSignal — Personal Guardian AI
+# Aurora — Personal Guardian AI
 
 > **Live Production Submission Link:** [https://safesignal-five.vercel.app](https://safesignal-five.vercel.app)  
-> **Fallback Mirror:** [https://safesignal-jftg3t8mh-kavyasingla24-1235.vercel.app](https://safesignal-jftg3t8mh-kavyasingla24-1235.vercel.app)
+> **Fallback Mirror:** [https://safesignal-f0eu98is3-kavyasingla24-1235.vercel.app](https://safesignal-f0eu98is3-kavyasingla24-1235.vercel.app)  
+> **GitHub Repository:** [https://github.com/KavyaSingla244/Aurora](https://github.com/KavyaSingla244/Aurora)
 
 ---
 
 ## Overview
 
-**SafeSignal** is an intelligent, privacy-first personal safety web application designed around a **multi-signal composite risk-scoring engine**. Rather than relying on single-trigger panic buttons, SafeSignal synthesizes real-world sensor telemetry and behavioral cues in real time to proactively detect danger, initiate non-intrusive safety check-ins, and escalate to emergency dispatch under duress or silence.
+**Aurora** is an intelligent, privacy-first personal safety web application designed around a **multi-signal composite risk-scoring engine**. Rather than relying on single-trigger panic buttons, Aurora synthesizes real-world sensor telemetry and behavioral cues in real time to proactively detect danger, initiate non-intrusive safety check-ins, and escalate to emergency dispatch under duress or silence.
 
 ---
 
@@ -56,7 +57,7 @@
 ## Project Architecture
 
 ```
-safesignal/
+aurora/
 ├── src/
 │   ├── engine/
 │   │   ├── riskScore.js            # Pure functional composite risk engine

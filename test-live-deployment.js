@@ -28,7 +28,7 @@ async function runLiveVerification() {
 
     const title = await page.title();
     console.log(`✓ Page Title: "${title}"`);
-    console.assert(title.includes('SafeSignal'), 'Title must contain SafeSignal');
+    console.assert(title.includes('Aurora'), 'Title must contain Aurora');
 
     const metaDesc = await page.$eval('meta[name="description"]', el => el.content).catch(() => null);
     console.log(`✓ Meta Description: "${metaDesc}"`);

@@ -90,7 +90,7 @@ export default function SimulationPanel() {
         </div>
         <h2 className="simulation-title">Live Behavioral & Environmental Telemetry</h2>
         <p className="simulation-notice">
-          SafeSignal automatically captures <strong>real browser signals</strong> (System Clock, Battery API, and Geolocation Kinematics) where available, and falls back to manual simulation controls when sensors are restricted or unpermitted.
+          Aurora automatically captures <strong>real browser signals</strong> (System Clock, Battery API, and Geolocation Kinematics) where available, and falls back to manual simulation controls when sensors are restricted or unpermitted.
         </p>
       </div>
 
@@ -182,7 +182,7 @@ export default function SimulationPanel() {
                 </button>
               </div>
               <p className="pre-perm-text">
-                SafeSignal calculates transit velocity and stationary duration in real time using the Haversine distance formula between consecutive GPS coordinates. <strong>All coordinates remain strictly on-device in browser memory.</strong>
+                Aurora calculates transit velocity and stationary duration in real time using the Haversine distance formula between consecutive GPS coordinates. <strong>All coordinates remain strictly on-device in browser memory.</strong>
               </p>
               <div className="pre-perm-actions">
                 <button

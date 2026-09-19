@@ -1,5 +1,5 @@
 /**
- * SafeSignal - Risk Scoring Engine Test Scenarios
+ * Aurora - Risk Scoring Engine Test Scenarios
  * 
  * Demonstrates and validates the deterministic behavior of calculateRiskScore()
  * across key benchmark scenarios.
@@ -171,7 +171,7 @@ const scenarios = [
 ];
 
 console.log('='.repeat(80));
-console.log('SAFESIGNAL - RISK SCORING ENGINE SCENARIO VALIDATION');
+console.log('AURORA - RISK SCORING ENGINE SCENARIO VALIDATION');
 console.log('Thresholds:', JSON.stringify(TIER_THRESHOLDS));
 console.log('='.repeat(80));
 
