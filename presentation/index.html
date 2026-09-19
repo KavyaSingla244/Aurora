@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurora — Hackathon Presentation Deck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #070a13;
+      --card-bg: #111827;
+      --card-border: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent-cyan: #38bdf8;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top progress bar */
+    .progress-bar {
+      height: 4px;
+      width: 100%;
+      background: #1e293b;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 100;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+      width: 8.33%;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Slide container */
+    .deck-container {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .slide {
+      position: absolute;
+      width: min(1200px, 92vw);
+      height: min(675px, 82vh);
+      background: #0b1120;
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 48px 56px;
+      display: none;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Category header badge */
+    .category-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      margin-bottom: 8px;
+    }
+
+    .slide-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      margin-bottom: 28px;
+    }
+
+    /* Cards Grid */
+    .grid-2x2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-gap: 20px;
+      flex: 1;
+    }
+
+    .grid-3col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-gap: 20px;
+      flex: 1;
+    }
+
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-gap: 24px;
+      flex: 1;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-body {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .card-body ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .card-body li {
+      margin-bottom: 8px;
+      position: relative;
+      padding-left: 14px;
+    }
+
+    .card-body li::before {
+      content: "•";
+      color: var(--accent-cyan);
+      position: absolute;
+      left: 0;
+      font-weight: bold;
+    }
+
+    /* Specialized cards */
+    .card-cyan { border-color: rgba(56, 189, 248, 0.4); }
+    .card-green { border-color: rgba(16, 185, 129, 0.4); }
+    .card-amber { border-color: rgba(245, 158, 11, 0.4); }
+    .card-red { border-color: rgba(239, 68, 68, 0.4); }
+
+    .formula-box {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px dashed var(--accent-red);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 12px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #fca5a5;
+    }
+
+    /* Screenshots on Slide 8 */
+    .screen-img {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+      object-position: top;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      margin-bottom: 12px;
+    }
+
+    /* Navigation toolbar */
+    .controls {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      background: rgba(7, 10, 19, 0.8);
+      border-top: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+    }
+
+    .slide-counter {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      background: #1e293b;
+      color: var(--text-main);
+      border: 1px solid #334155;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #334155;
+      border-color: var(--accent-cyan);
+      color: #fff;
+    }
+
+    .btn-primary {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+    .btn-primary:hover {
+      background: var(--accent-cyan);
+      color: #070a13;
+    }
+
+    /* Links styling */
+    .link-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin-top: 14px;
+    }
+
+    .link-row a {
+      color: var(--accent-cyan);
+      text-decoration: none;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .link-row a:hover {
+      text-decoration: underline;
+    }
+
+    /* Fullscreen indicator */
+    .hint {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    @media print {
+      body { overflow: visible; height: auto; }
+      .slide { position: relative; display: flex !important; page-break-after: always; width: 100%; height: 100vh; margin: 0; box-shadow: none; border: none; }
+      .controls, .progress-bar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <div class="deck-container">
+
+    <!-- SLIDE 1: TITLE -->
+    <div class="slide active" id="slide-1">
+      <div style="margin: auto 0;">
+        <div class="category-badge">🛡️ COMPOSITE RISK GUARDIAN</div>
+        <h1 style="font-size: 58px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 12px; background: linear-gradient(135deg, #fff 40%, var(--accent-cyan) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Aurora</h1>
+        <p style="font-size: 24px; font-weight: 500; color: var(--accent-cyan); margin-bottom: 24px;">A personal safety system that acts before you have to ask.</p>
+        <p style="font-size: 15px; color: var(--text-muted); line-height: 1.7; max-width: 800px; margin-bottom: 36px;">
+          Continuous multi-signal behavioral telemetry • Anti-coercion fail-closed check-in • 100% on-device privacy
+        </p>
+        <div style="border-top: 1px solid var(--card-border); padding-top: 20px; display: flex; gap: 40px; font-size: 13px; color: var(--text-dim);">
+          <span><strong>Submission:</strong> Hackathon 2026</span>
+          <span><strong>Format:</strong> Architecture & Self-Contained Judging Deck</span>
+          <span><strong>Status:</strong> Deployed in Production</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: THE PROBLEM -->
+    <div class="slide" id="slide-2">
+      <div class="category-badge">PROBLEM STATEMENT</div>
+      <h2 class="slide-title">The Critical Flaw of Reactive Safety Apps</h2>
+      <div class="grid-2x2">
+        <div class="card card-amber">
+          <div class="card-title" style="color: var(--accent-amber);">🚨 The Manual Action Fallacy</div>
+          <div class="card-body">
+            Most safety apps assume the victim can recognize danger and act in the moment (unlock phone, open app, tap panic button). Under real panic, physical restraint, or sudden threat, this assumption collapses.
+          </div>
+        </div>
+        <div class="card card-red">
+          <div class="card-title" style="color: var(--accent-red);">🤐 The Coercion Blindspot</div>
+          <div class="card-body">
+            Attackers routinely force victims to unlock phones and reply "I'm fine." Traditional check-ins treat any reassuring response as safety confirmation and stand down immediately.
+          </div>
+        </div>
+        <div class="card card-amber">
+          <div class="card-title" style="color: var(--accent-amber);">⏱️ Hesitation & False-Alarm Fear</div>
+          <div class="card-body">
+            Users hesitate to press loud panic buttons due to social embarrassment or fear of overreacting — delaying emergency assistance until danger is already unavoidable.
+          </div>
+        </div>
+        <div class="card card-cyan">
+          <div class="card-title" style="color: var(--accent-cyan);">🔋 Always-On Surveillance Fatigue</div>
+          <div class="card-body">
+            Constant 24/7 background tracking drains phone battery and induces surveillance discomfort on both sides, leading users to disable safety features altogether.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: OUR APPROACH -->
+    <div class="slide" id="slide-3">
+      <div class="category-badge">CORE PHILOSOPHY</div>
+      <h2 class="slide-title">Inverting the Safety Model: Default Toward Caution</h2>
+      <div class="grid-2col">
+        <div class="card" style="border-color: var(--card-border);">
+          <div style="font-size: 12px; font-weight: 700; color: var(--accent-red); text-transform: uppercase; margin-bottom: 6px;">Traditional Safety Paradigm</div>
+          <div style="font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 14px;">Assumes Safe Until Explicit Panic</div>
+          <div class="card-body">
+            <ul>
+              <li><strong>Passive idle state:</strong> App sits dormant waiting for user action.</li>
+              <li><strong>Manual burden:</strong> Requires unlocking phone mid-crisis.</li>
+              <li><strong>Naive verification:</strong> Any tap or "I'm okay" response stops alerts.</li>
+              <li><strong>Outcome:</strong> Fails completely if user is restrained, incapacitated, or coerced.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card card-green" style="background: rgba(16, 185, 129, 0.04);">
+          <div style="font-size: 12px; font-weight: 700; color: var(--accent-green); text-transform: uppercase; margin-bottom: 6px;">Aurora Safety Paradigm</div>
+          <div style="font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 14px;">Assumes Risk Upon Anomalies; Proof Required</div>
+          <div class="card-body">
+            <ul>
+              <li><strong>Continuous telemetry:</strong> Monitors speed, stillness, time, zones, battery.</li>
+              <li><strong>Multi-factor compounding:</strong> Correlated anomalies trigger quiet check-in.</li>
+              <li><strong>Strict safe-word stand-down:</strong> Only private authenticated phrase cancels.</li>
+              <li><strong>Fail-closed default:</strong> Silence or wrong word escalates immediately to SOS.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: HOW RISK ENGINE WORKS -->
+    <div class="slide" id="slide-4">
+      <div class="category-badge">ENGINE ARCHITECTURE</div>
+      <h2 class="slide-title">Composite Risk Scoring Engine (0 – 100 Scale)</h2>
+      <div class="grid-3col">
+        <div class="card card-cyan">
+          <div class="card-title" style="color: var(--accent-cyan);">1. Passive Input Signals</div>
+          <div class="card-body">
+            <ul>
+              <li><strong>Transit Pace:</strong> Walk, accelerate, sprint</li>
+              <li><strong>Stillness:</strong> Stationary duration (seconds)</li>
+              <li><strong>Time of Day:</strong> Diurnal day vs night cycle</li>
+              <li><strong>Route Familiarity:</strong> 500m geofenced zones</li>
+              <li><strong>Battery Telemetry:</strong> Normal vs plunge</li>
+              <li><strong>Crowd Density:</strong> Isolated vs populated</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card card-amber">
+          <div class="card-title" style="color: var(--accent-amber);">2. Compounding & Dynamics</div>
+          <div class="card-body">
+            <p style="margin-bottom: 8px;"><strong>Cross-Factor Multipliers:</strong></p>
+            <p style="font-size: 12.5px; color: var(--text-main); margin-bottom: 12px;">
+              • 2 factors: 1.15x<br>
+              • 3 factors: 1.25x<br>
+              • 4+ factors: 1.35x compounding
+            </p>
+            <p style="margin-bottom: 6px;"><strong>Asymmetric Decay:</strong></p>
+            <p style="font-size: 12px;">
+              • <em>Instant jump:</em> Threat bursts escalate immediately.<br>
+              • <em>Gradual decay:</em> 0.5 pts/sec recovery to prevent premature stand-down.
+            </p>
+          </div>
+        </div>
+        <div class="card card-red">
+          <div class="card-title" style="color: var(--accent-red);">3. Worked Scenario Example</div>
+          <div class="card-body">
+            <p style="font-size: 12px; margin-bottom: 6px;"><strong>Scenario: Night Evasive Sprint</strong></p>
+            <p style="font-size: 11.5px; color: var(--text-muted); line-height: 1.4;">
+              • Night Diurnal Baseline (+15)<br>
+              • Unfamiliar Zone (+12)<br>
+              • Deserted Area (+10)<br>
+              • Accelerating Pace (+15)<br>
+              • 4-Factor Multiplier (1.35x)
+            </p>
+            <div class="formula-box">
+              (15+12+10+15) × 1.35 = 70.2<br>
+              <strong>Tier: HIGH (Score 70/100)</strong><br>
+              Action: Anti-Coercion Check-In
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: ANTI-COERCION CHECK-IN -->
+    <div class="slide" id="slide-5">
+      <div class="category-badge">VERIFICATION PROTOCOL</div>
+      <h2 class="slide-title">Fail-Closed Anti-Coercion Check-In</h2>
+      <div class="card" style="background: rgba(30, 41, 59, 0.4); margin-bottom: 20px; padding: 18px 24px;">
+        <div style="font-size: 14px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 4px;">KEY INSIGHT: Coerced Confirmations Are Inherently Untrustworthy</div>
+        <div style="font-size: 13px; color: var(--text-muted);">
+          In active danger, an assailant can easily force a victim to tap "I'm Safe" or type "Everything is fine." Aurora rejects unauthenticated reassurance: <strong>only the user's secret arbitrary safe phrase cancels escalation.</strong>
+        </div>
+      </div>
+      <div class="grid-3col">
+        <div class="card">
+          <div class="card-title" style="color: var(--accent-cyan);">1. Elevated Trigger</div>
+          <div class="card-body">
+            When composite risk crosses into Elevated/High tier, Aurora suppresses alarms and launches a discreet prompt without alerting nearby assailants.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color: var(--accent-amber);">2. Secret Safe Word</div>
+          <div class="card-body">
+            Only the user's private phrase stands down the system. Typing "I'm okay" or any wrong word triggers immediate Emergency SOS dispatch.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color: var(--accent-red);">3. Silence Escalation</div>
+          <div class="card-body">
+            Silence gives 3 timed retry cycles (30s window + 10s gap). If unanswered after 3 attempts, Emergency SOS automatically arms.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: SHARING MODEL -->
+    <div class="slide" id="slide-6">
+      <div class="category-badge">PRIVACY ARCHITECTURE</div>
+      <h2 class="slide-title">Session-Scoped Sharing vs Always-On Tracking</h2>
+      <div class="grid-3col">
+        <div class="card card-cyan">
+          <div class="card-title" style="color: var(--accent-cyan);">👤 Solo Mode</div>
+          <div style="font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">Zero Sharing by Default</div>
+          <div class="card-body">
+            Built for total privacy. All risk calculations, sensors, and state remain 100% on-device. Nothing is broadcast to external contacts unless the user triggers local SOS.
+          </div>
+        </div>
+        <div class="card card-green">
+          <div class="card-title" style="color: var(--accent-green);">👥 Connected Mode</div>
+          <div style="font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">Emergency-Only Circle</div>
+          <div class="card-body">
+            Configures 1 to 3 trusted contacts. Circle is never notified during normal safe commutes — only alerted upon Critical tier transitions or Emergency SOS dispatches.
+          </div>
+        </div>
+        <div class="card card-amber">
+          <div class="card-title" style="color: var(--accent-amber);">📍 Live Journey Share</div>
+          <div style="font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">Time-Boxed Active Walk</div>
+          <div class="card-body">
+            User explicitly starts monitoring before a specific walk and it auto-terminates on arrival. Eliminates both battery drain and recipient notification fatigue.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: DIFFERENTIATORS -->
+    <div class="slide" id="slide-7">
+      <div class="category-badge">MARKET COMPARISON</div>
+      <h2 class="slide-title">Genuinely Novel Differentiators vs Market Apps</h2>
+      <div style="font-size: 12px; color: var(--accent-cyan); background: rgba(56, 189, 248, 0.08); padding: 8px 16px; border-radius: 6px; margin-bottom: 16px; border: 1px solid rgba(56, 189, 248, 0.2);">
+        Market Reference: Life360, Noonlight, bSafe, Safetipin rely on manual buttons or static pre-computed maps. None offer live behavioral fusion with anti-coercion.
+      </div>
+      <div class="grid-2x2">
+        <div class="card">
+          <div class="card-title" style="color: #fff;">1. Continuous Behavioral Fusion</div>
+          <div class="card-body">
+            Existing apps score an area once in advance; Aurora scores a dynamic live moment by compounding movement kinematics, diurnal time, geofencing, and battery telemetry.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color: #fff;">2. Fail-Closed Anti-Coercion</div>
+          <div class="card-body">
+            Existing panic buttons treat any tap as safe; Aurora defaults to security — silence and false reassurance fail closed and immediately arm Emergency SOS.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color: #fff;">3. Session-Scoped Privacy</div>
+          <div class="card-body">
+            Eliminates standing 24/7 tracking. Users activate Live Journey Sharing only when needed, avoiding notification fatigue and surveillance anxiety.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color: #fff;">4. Modular Pure-Function Engine</div>
+          <div class="card-body">
+            Pure mathematical scoring engine decoupled from UI. Can swap risk "lenses" (medical falls, pregnancy, elder care) without rewriting app architecture.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: LIVE PRODUCT SCREENSHOTS -->
+    <div class="slide" id="slide-8">
+      <div class="category-badge">PRODUCT DEMONSTRATION</div>
+      <h2 class="slide-title">Live Application Interfaces (Deployed & Verified)</h2>
+      <div class="grid-3col">
+        <div class="card" style="padding: 14px;">
+          <img src="screen_risk_baseline.png" alt="Threat Radar HUD" class="screen-img">
+          <div style="font-size: 13px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 4px;">1. Threat Radar HUD</div>
+          <div style="font-size: 11.5px; color: var(--text-muted);">Circular risk gauge, GPS & diurnal status chips, and real-time AI factor breakdown.</div>
+        </div>
+        <div class="card" style="padding: 14px;">
+          <img src="screen_checkin_elevated.png" alt="Anti-Coercion Check-In" class="screen-img">
+          <div style="font-size: 13px; font-weight: 700; color: var(--accent-amber); margin-bottom: 4px;">2. Anti-Coercion Prompt</div>
+          <div style="font-size: 11.5px; color: var(--text-muted);">Discreet countdown prompt triggered upon elevated multi-factor risk anomalies.</div>
+        </div>
+        <div class="card" style="padding: 14px;">
+          <img src="screen_sos_modal.png" alt="Emergency SOS Modal" class="screen-img">
+          <div style="font-size: 13px; font-weight: 700; color: var(--accent-red); margin-bottom: 4px;">3. Emergency SOS Dispatch</div>
+          <div style="font-size: 11.5px; color: var(--text-muted);">Native tap-to-call emergency links (112, 100) and strict safe-word disarm authentication.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: ARCHITECTURE -->
+    <div class="slide" id="slide-9">
+      <div class="category-badge">TECHNICAL DESIGN</div>
+      <h2 class="slide-title">Architecture: 100% On-Device & Zero Attack Surface</h2>
+      <div class="grid-3col">
+        <div class="card card-cyan">
+          <div class="card-title" style="color: var(--accent-cyan);">📡 Real Browser Telemetry</div>
+          <div class="card-body">
+            <ul>
+              <li><strong>System Clock API:</strong> Diurnal Day/Night</li>
+              <li><strong>Geolocation API:</strong> Haversine Velocity & Stillness</li>
+              <li><strong>Battery API:</strong> Level & Plunge Gradient</li>
+              <li><strong>Graceful Fallbacks:</strong> Manual dials if permissions denied</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card card-amber">
+          <div class="card-title" style="color: var(--accent-amber);">⚙️ Pure Function Engine</div>
+          <div class="card-body">
+            <ul>
+              <li><strong>Deterministic:</strong> Zero DOM, Zero React State, Zero External APIs</li>
+              <li><strong>Signature:</strong> Input: Signals -> Output: Score & Tier</li>
+              <li><strong>Cross-Platform:</strong> Runs identically in Web, React Native, Wearable OS, Edge</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card card-green">
+          <div class="card-title" style="color: var(--accent-green);">🔒 Local Persistence</div>
+          <div class="card-body">
+            <ul>
+              <li><strong>Zero Cloud DB:</strong> Safe words and contacts remain in local storage</li>
+              <li><strong>Zero Credential Leaks:</strong> No centralized user database to breach</li>
+              <li><strong>Privacy-by-Design:</strong> Deliberate security architecture, not a limitation</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: KNOWN LIMITATIONS -->
+    <div class="slide" id="slide-10">
+      <div class="category-badge">LIMITATIONS</div>
+      <h2 class="slide-title">Intellectual Honesty: Known PoC Constraints</h2>
+      <div class="grid-2x2">
+        <div class="card card-amber">
+          <div class="card-title" style="color: var(--accent-amber);">📡 Simulated Notification Delivery</div>
+          <div class="card-body">
+            Trusted Circle notifications are currently simulated in client UI. Production rollout requires dedicated SMS/Push gateways (Twilio, FCM) for off-device recipient alerting.
+          </div>
+        </div>
+        <div class="card card-amber">
+          <div class="card-title" style="color: var(--accent-amber);">🚔 Direct Dispatch Integration</div>
+          <div class="card-body">
+            Emergency flow surfaces native tap-to-call links (112, 100 in India). Automated PSAP CAD dispatch requires governmental public safety partnerships.
+          </div>
+        </div>
+        <div class="card card-cyan">
+          <div class="card-title" style="color: var(--accent-cyan);">🗺️ Area Crime Statistics</div>
+          <div class="card-body">
+            Route familiarity is currently derived from user-saved geofenced zones. Ingesting macro historical crime records (e.g. NCRB precinct datasets) remains future scope.
+          </div>
+        </div>
+        <div class="card card-red">
+          <div class="card-title" style="color: var(--accent-red);">🛡️ Physical Coercion Ceiling</div>
+          <div class="card-body">
+            Software cannot physically stop an in-person assailant. Safe-word protocols significantly raise the barrier to spoofing, but have physical real-world limits.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: FUTURE SCOPE -->
+    <div class="slide" id="slide-11">
+      <div class="category-badge">FUTURE SCOPE</div>
+      <h2 class="slide-title">Engineering Roadmap & Production Extensions</h2>
+      <div style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
+        <div class="card" style="padding: 12px 20px;">
+          <div style="font-size: 14px; font-weight: 700; color: var(--accent-cyan);">📊 Predictive NCRB Crime Heatmaps</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Ingesting historical police precinct records to automatically adjust geographical baseline risk without manual user geofencing.</div>
+        </div>
+        <div class="card" style="padding: 12px 20px;">
+          <div style="font-size: 14px; font-weight: 700; color: var(--accent-cyan);">🎙️ Ambient Distress Sound AI</div>
+          <div style="font-size: 12px; color: var(--text-muted);">On-device lightweight audio classification (Google YAMNet) detecting screams or breaking glass as an emergency signal without storing audio.</div>
+        </div>
+        <div class="card" style="padding: 12px 20px;">
+          <div style="font-size: 14px; font-weight: 700; color: var(--accent-cyan);">👆 Duress-Specific Biometrics</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Alternate fingerprint or disguised spoken phrases that visually appear to confirm safety to an attacker but silently trigger emergency escalation.</div>
+        </div>
+        <div class="card" style="padding: 12px 20px;">
+          <div style="font-size: 14px; font-weight: 700; color: var(--accent-cyan);">⌚ Wearable Sensor Integration</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Smartwatch biometric monitoring (heart-rate spikes, sudden fall acceleration) and discreet physical confirmation tap gestures.</div>
+        </div>
+        <div class="card" style="padding: 12px 20px;">
+          <div style="font-size: 14px; font-weight: 700; color: var(--accent-cyan);">💬 Dedicated Messaging Gateway</div>
+          <div style="font-size: 12px; color: var(--text-muted);">End-to-end encrypted SMS & automated voice dispatch through carrier gateways to deliver reliable alerts in low-connectivity areas.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: CLOSING & LINKS -->
+    <div class="slide" id="slide-12">
+      <div style="margin: auto 0;">
+        <div class="category-badge">CONCLUSION</div>
+        <h2 style="font-size: 40px; font-weight: 800; color: #fff; margin-bottom: 8px;">Aurora: Safety Built for Reality</h2>
+        <p style="font-size: 18px; color: var(--accent-cyan); margin-bottom: 28px;">Because in a real crisis, you should never have to remember to ask for help.</p>
+
+        <div class="link-row">
+          <div>
+            <div style="font-size: 11px; font-weight: 700; color: var(--accent-green); text-transform: uppercase;">🌐 Live Production Application</div>
+            <a href="https://safesignal-five.vercel.app" target="_blank">https://safesignal-five.vercel.app</a>
+          </div>
+          <a href="https://safesignal-five.vercel.app" target="_blank" class="btn btn-primary">Open App ↗</a>
+        </div>
+
+        <div class="link-row">
+          <div>
+            <div style="font-size: 11px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase;">📦 GitHub Repository (Public)</div>
+            <a href="https://github.com/KavyaSingla244/Aurora" target="_blank">https://github.com/KavyaSingla244/Aurora</a>
+          </div>
+          <a href="https://github.com/KavyaSingla244/Aurora" target="_blank" class="btn">View Source ↗</a>
+        </div>
+
+        <div style="margin-top: 24px; font-size: 12.5px; color: var(--text-dim);">
+          Ready for immediate evaluation • Includes interactive Judge Scenario Presets & live GPS feeds.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM CONTROLS -->
+  <div class="controls">
+    <div class="slide-counter" id="slideCounter">SLIDE 01 / 12</div>
+    <div class="hint">Use ← → arrow keys, Spacebar, or buttons to navigate | Press 'F' for fullscreen</div>
+    <div class="nav-buttons">
+      <button class="btn" id="prevBtn" onclick="prevSlide()">← Prev</button>
+      <button class="btn btn-primary" id="nextBtn" onclick="nextSlide()">Next →</button>
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 12;
+
+    function updateSlide() {
+      document.querySelectorAll('.slide').forEach((slide, idx) => {
+        slide.classList.toggle('active', idx + 1 === currentSlide);
+      });
+      document.getElementById('slideCounter').innerText = `SLIDE ${String(currentSlide).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+      document.getElementById('progressFill').style.width = `${(currentSlide / totalSlides) * 100}%`;
+      document.getElementById('prevBtn').disabled = currentSlide === 1;
+      document.getElementById('nextBtn').innerText = currentSlide === totalSlides ? 'Restart ↺' : 'Next →';
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+      } else {
+        currentSlide = 1;
+      }
+      updateSlide();
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen();
+        }
+      }
+    });
+
+    // Touch swipe support
+    let touchStartX = 0;
+    document.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX);
+    document.addEventListener('touchend', e => {
+      let touchEndX = e.changedTouches[0].screenX;
+      if (touchStartX - touchEndX > 50) nextSlide();
+      if (touchEndX - touchStartX > 50) prevSlide();
+    });
+
+    updateSlide();
+  </script>
+</body>
+</html>
