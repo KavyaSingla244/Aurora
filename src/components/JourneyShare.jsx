@@ -13,7 +13,8 @@ export default function JourneyShare() {
     getCircleNames,
     setShowSettingsModal,
     geoSignals,
-    familiarPlaces
+    familiarPlaces,
+    trustedCircle
   } = useApp();
 
   const [customLabel, setCustomLabel] = useState('');
@@ -171,6 +172,33 @@ export default function JourneyShare() {
             </div>
 
             {copyStatus && <span className="copy-confirm-text">{copyStatus}</span>}
+
+            {/* Feature 5: One-Tap Direct Contact Forwarding for Live Walk */}
+            {trustedCircle.filter(c => c.name && c.phone).length > 0 && (
+              <div style={{ marginTop: '0.85rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  One-Tap Live Tracking Dispatch:
+                </span>
+                {trustedCircle.filter(c => c.name && c.phone).map((contact, idx) => {
+                  const cleanPhone = (contact.phone || '').replace(/[^0-9]/g, '');
+                  const lat = geoSignals.coordinates?.latitude || 28.6139;
+                  const lng = geoSignals.coordinates?.longitude || 77.2090;
+                  const trackMsg = `📍 AURORA LIVE JOURNEY: I started a walk ("${journey.label}"). Track my live GPS location here: https://safesignal-five.vercel.app?track=${encodeURIComponent(journey.label)}&lat=${lat}&lng=${lng}`;
+                  const cWa = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(trackMsg)}`;
+                  const cSms = `sms:${contact.phone}?body=${encodeURIComponent(trackMsg)}`;
+                  return (
+                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                      <a href={cWa} target="_blank" rel="noreferrer" style={{ fontSize: '0.78rem', padding: '0.5rem', textAlign: 'center', textDecoration: 'none', background: '#25d366', color: '#fff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontWeight: 600 }}>
+                        💬 WhatsApp {contact.name}
+                      </a>
+                      <a href={cSms} target="_blank" rel="noreferrer" style={{ fontSize: '0.78rem', padding: '0.5rem', textAlign: 'center', textDecoration: 'none', background: '#3b82f6', color: '#fff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontWeight: 600 }}>
+                        📱 SMS {contact.name}
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ) : (
           <div className="journey-start-section">

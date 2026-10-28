@@ -128,8 +128,20 @@ export default function SOSButton() {
   };
 
   const alertText = emergencyPayload?.messageText || 'Emergency alert active';
-  const smsHref = `sms:?body=${encodeURIComponent(alertText)}`;
-  const waHref = `https://wa.me/?text=${encodeURIComponent(alertText)}`;
+  const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  // Contacts with valid phone numbers
+  const validContacts = (trustedCircle || []).filter(c => c.name && c.phone);
+  const primaryPhone = validContacts[0]?.phone || '';
+  const cleanPrimaryPhone = primaryPhone.replace(/[^0-9]/g, '');
+
+  const defaultSmsHref = primaryPhone
+    ? `sms:${primaryPhone}${isIOS ? '&' : '?'}body=${encodeURIComponent(alertText)}`
+    : `sms:?body=${encodeURIComponent(alertText)}`;
+
+  const defaultWaHref = cleanPrimaryPhone
+    ? `https://wa.me/${cleanPrimaryPhone}?text=${encodeURIComponent(alertText)}`
+    : `https://wa.me/?text=${encodeURIComponent(alertText)}`;
 
   return (
     <>
@@ -213,21 +225,45 @@ export default function SOSButton() {
 
             {/* Direct Dispatch & Broadcast Backup Action Links */}
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Manual Backup Forwarding (Optional):
+              One-Tap Direct Contact Forwarding:
             </div>
-            <div className="emergency-dispatch-action-row">
-              <a href={smsHref} className="btn-dispatch-link link-sms" target="_blank" rel="noreferrer">
-                📱 Forward via SMS
-              </a>
-              <a href={waHref} className="btn-dispatch-link link-wa" target="_blank" rel="noreferrer">
-                💬 Forward via WhatsApp
-              </a>
-              {typeof navigator !== 'undefined' && navigator.share && (
-                <button type="button" className="btn-dispatch-link link-share" onClick={handleNativeShare}>
-                  🔗 Native Share
+
+            {validContacts.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                {validContacts.map((contact, idx) => {
+                  const cleanPhone = (contact.phone || '').replace(/[^0-9]/g, '');
+                  const cSmsHref = `sms:${contact.phone}${isIOS ? '&' : '?'}body=${encodeURIComponent(alertText)}`;
+                  const cWaHref = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(alertText)}`;
+                  return (
+                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                      <a href={cWaHref} className="btn-dispatch-link link-wa" target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', padding: '0.5rem' }}>
+                        💬 WhatsApp {contact.name}
+                      </a>
+                      <a href={cSmsHref} className="btn-dispatch-link link-sms" target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', padding: '0.5rem' }}>
+                        📱 SMS {contact.name}
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="emergency-dispatch-action-row" style={{ marginBottom: '0.75rem' }}>
+                <a href={defaultSmsHref} className="btn-dispatch-link link-sms" target="_blank" rel="noreferrer">
+                  📱 Forward via SMS
+                </a>
+                <a href={defaultWaHref} className="btn-dispatch-link link-wa" target="_blank" rel="noreferrer">
+                  💬 Forward via WhatsApp
+                </a>
+              </div>
+            )}
+
+            {typeof navigator !== 'undefined' && navigator.share && (
+              <div style={{ marginBottom: '0.75rem' }}>
+                <button type="button" className="btn-dispatch-link link-share" onClick={handleNativeShare} style={{ width: '100%', justifyContent: 'center' }}>
+                  🔗 Native Share to Any App (Telegram / Signal / Contacts)
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Feature 17: Emergency Delivery Status Live Tracker */}
             {deliveryRecords.length > 0 && (
