@@ -44,6 +44,14 @@ export default function TrustedCircleManager() {
     setContacts(prev => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
+      // Auto-save immediately to AppContext & localStorage so user changes are never lost
+      const valid = updated.filter(c => c.name.trim() || c.phone.trim());
+      if (valid.length > 0) {
+        setTrustedCircle(valid);
+        if (mode === 'Solo') {
+          setMode('Connected');
+        }
+      }
       return updated;
     });
   };
@@ -57,7 +65,12 @@ export default function TrustedCircleManager() {
   };
 
   const handleRemoveContact = (index) => {
-    setContacts(prev => prev.filter((_, i) => i !== index));
+    setContacts(prev => {
+      const updated = prev.filter((_, i) => i !== index);
+      const valid = updated.filter(c => c.name.trim() || c.phone.trim());
+      setTrustedCircle(valid);
+      return updated;
+    });
   };
 
   const handleTestTelegram = async () => {
@@ -141,6 +154,29 @@ export default function TrustedCircleManager() {
           >
             👥 Connected Mode (Circle Active)
           </button>
+        </div>
+      </div>
+
+      {/* Visual Guide: How Alert Delivery Works on Mobile */}
+      <div style={{
+        background: 'rgba(59, 130, 246, 0.08)',
+        border: '1px solid rgba(59, 130, 246, 0.25)',
+        borderRadius: '12px',
+        padding: '0.85rem 1rem',
+        margin: '1rem 0',
+        fontSize: '0.82rem',
+        lineHeight: '1.45'
+      }}>
+        <div style={{ fontWeight: 600, color: '#93c5fd', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span>💡</span> <strong>How Friends Receive Notifications on Their Phone:</strong>
+        </div>
+        <div style={{ color: 'var(--text-secondary)' }}>
+          <p style={{ margin: '0 0 0.4rem 0' }}>
+            • <strong>Instant 1-Tap Forwarding (Zero Setup):</strong> When you start a walk or press SOS, Aurora generates direct buttons (e.g. <em>"💬 WhatsApp [Friend]"</em> or <em>"📱 SMS [Friend]"</em>) that instantly open your chat with that friend, pre-filling your live GPS tracking link!
+          </p>
+          <p style={{ margin: 0 }}>
+            • <strong>Automated Background Cloud Dispatch:</strong> In a real crisis, to send alerts without touching anything, connect a free <strong>Telegram Bot</strong> or <strong>CallMeBot WhatsApp API</strong> below. Aurora will ping your friend's phone silently through cloud servers.
+          </p>
         </div>
       </div>
 

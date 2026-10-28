@@ -101,16 +101,25 @@ export function useGeolocationSignals({
         // Meaningful position change detected -> Reset stillness timer
         lastMovementTimeRef.current = now;
         setGpsStillnessSeconds(0);
-      }
 
-      // Calculate speed from distance/time or use hardware GPS speed if provided
-      if (typeof speed === 'number' && !isNaN(speed) && speed >= 0) {
-        calculatedSpeed = Math.round(speed * 3.6 * 10) / 10;
+        // Calculate speed from distance/time or use hardware GPS speed if provided
+        if (typeof speed === 'number' && !isNaN(speed) && speed >= 0.3) {
+          calculatedSpeed = Math.round(speed * 3.6 * 10) / 10;
+        } else {
+          calculatedSpeed = calculateSpeedKmh(distMeters, timeDeltaSeconds);
+        }
+
+        // Clamp negligible drift (< 1.2 km/h) to 0
+        if (calculatedSpeed < 1.2) {
+          calculatedSpeed = 0;
+        }
       } else {
-        calculatedSpeed = calculateSpeedKmh(distMeters, timeDeltaSeconds);
+        // Position shift is within GPS jitter noise (< 10m) -> Phone is stationary / sitting
+        calculatedSpeed = 0;
       }
     } else {
       lastMovementTimeRef.current = now;
+      calculatedSpeed = 0;
     }
 
     setSpeedKmh(calculatedSpeed);

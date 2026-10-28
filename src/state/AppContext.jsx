@@ -13,7 +13,14 @@ import { useNetworkSignal } from '../signals/useNetworkSignal';
 import { useSpeechInteraction } from '../signals/useSpeechInteraction';
 import { useEnvironmentalWeatherSignal } from '../signals/useEnvironmentalWeatherSignal';
 import { explainRiskAssessment, interpretSafetyCommand, fetchGeminiSafetyAnalysis } from '../engine/aiReasoning';
-import { buildEmergencyPayload, dispatchEmergencyToCircle, sendBrowserNotification } from '../engine/deliveryService';
+import {
+  buildEmergencyPayload,
+  dispatchEmergencyToCircle,
+  sendBrowserNotification,
+  sendTelegramAlert,
+  sendDirectWhatsAppAlert,
+  postToCustomWebhook
+} from '../engine/deliveryService';
 import { sirenSynth } from '../engine/sirenSynth';
 
 export { CHECKIN_RESPONSE_WINDOW_SECONDS, CHECKIN_MAX_ATTEMPTS, CHECKIN_RETRY_INTERVAL_SECONDS };
@@ -465,7 +472,49 @@ export function AppProvider({ children }) {
 
     const names = getCircleNames();
     dispatchCircleNotification(`📍 JOURNEY STARTED: Notifying ${names} — "${cleanLabel}" (Live monitoring enabled)`, 'info');
-  }, [getCircleNames, dispatchCircleNotification, addTimelineEvent]);
+
+    // If Connected mode is active, dispatch journey tracking link to configured cloud gateways
+    if (mode === 'Connected') {
+      const lat = geoSignals.coordinates?.latitude || 28.6139;
+      const lng = geoSignals.coordinates?.longitude || 77.2090;
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://safesignal-five.vercel.app';
+      const trackUrl = `${origin}?track=${encodeURIComponent(cleanLabel)}&lat=${lat}&lng=${lng}`;
+      const msg = `📍 AURORA LIVE JOURNEY STARTED\nTrip: ${cleanLabel}\nLive Tracking: ${trackUrl}`;
+
+      if (telegramConfig && telegramConfig.enabled && telegramConfig.botToken && telegramConfig.chatId) {
+        sendTelegramAlert({
+          botToken: telegramConfig.botToken,
+          chatId: telegramConfig.chatId,
+          messageText: msg
+        });
+      }
+      if (webhookUrl) {
+        postToCustomWebhook(webhookUrl, {
+          event: 'JOURNEY_START',
+          label: cleanLabel,
+          trackUrl,
+          coordinates: geoSignals.coordinates,
+          timestamp: Date.now()
+        });
+      }
+      if (whatsappConfig && whatsappConfig.enabled && trustedCircle.length > 0) {
+        trustedCircle.forEach(contact => {
+          if (contact.phone) {
+            sendDirectWhatsAppAlert({
+              phone: contact.phone,
+              messageText: msg,
+              gatewayType: whatsappConfig.gatewayType,
+              apiKey: whatsappConfig.apiKey,
+              accountSid: whatsappConfig.accountSid,
+              authToken: whatsappConfig.authToken,
+              fromNumber: whatsappConfig.fromNumber,
+              endpointUrl: whatsappConfig.endpointUrl
+            });
+          }
+        });
+      }
+    }
+  }, [mode, geoSignals, telegramConfig, webhookUrl, whatsappConfig, trustedCircle, getCircleNames, dispatchCircleNotification, addTimelineEvent]);
 
   const endJourney = useCallback(() => {
     setJourney({
@@ -482,7 +531,37 @@ export function AppProvider({ children }) {
 
     const names = getCircleNames();
     dispatchCircleNotification(`🏠 JOURNEY ENDED: Notifying ${names} — Arrived safely`, 'success');
-  }, [getCircleNames, dispatchCircleNotification, addTimelineEvent]);
+
+    if (mode === 'Connected') {
+      const msg = `🏠 AURORA UPDATE: Arrived safely at destination. Live tracking ended.`;
+      if (telegramConfig && telegramConfig.enabled && telegramConfig.botToken && telegramConfig.chatId) {
+        sendTelegramAlert({
+          botToken: telegramConfig.botToken,
+          chatId: telegramConfig.chatId,
+          messageText: msg
+        });
+      }
+      if (webhookUrl) {
+        postToCustomWebhook(webhookUrl, { event: 'JOURNEY_END', timestamp: Date.now() });
+      }
+      if (whatsappConfig && whatsappConfig.enabled && trustedCircle.length > 0) {
+        trustedCircle.forEach(contact => {
+          if (contact.phone) {
+            sendDirectWhatsAppAlert({
+              phone: contact.phone,
+              messageText: msg,
+              gatewayType: whatsappConfig.gatewayType,
+              apiKey: whatsappConfig.apiKey,
+              accountSid: whatsappConfig.accountSid,
+              authToken: whatsappConfig.authToken,
+              fromNumber: whatsappConfig.fromNumber,
+              endpointUrl: whatsappConfig.endpointUrl
+            });
+          }
+        });
+      }
+    }
+  }, [mode, telegramConfig, webhookUrl, whatsappConfig, trustedCircle, getCircleNames, dispatchCircleNotification, addTimelineEvent]);
 
   // Speech Engine Integration
   const speechEngine = useSpeechInteraction({
