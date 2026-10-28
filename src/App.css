@@ -20,6 +20,25 @@
   overflow: hidden;
 }
 
+@media (max-width: 640px) {
+  .app-shell {
+    padding: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  .app-phone-frame {
+    max-width: 100%;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  .app-top-header {
+    padding: 12px 14px 10px;
+  }
+}
+
 @media (min-width: 768px) {
   .app-shell {
     padding: 30px 20px 80px;

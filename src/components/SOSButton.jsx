@@ -144,6 +144,7 @@ export default function SOSButton() {
           onMouseLeave={cancelHold}
           onTouchStart={startHold}
           onTouchEnd={cancelHold}
+          onTouchCancel={cancelHold}
           title={isSOSActive ? 'Emergency Active' : privacySettings.instantSosTap ? 'Tap for Emergency SOS' : 'Press and hold 1 second for Emergency SOS'}
         >
           <div className="sos-btn-content">
