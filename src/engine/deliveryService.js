@@ -172,6 +172,76 @@ export async function sendTelegramAlert({ botToken, chatId, messageText }) {
 }
 
 /**
+ * Sends direct automated WhatsApp alert via Cloud REST Gateway (Twilio / CallMeBot / Meta Cloud)
+ * Does NOT require user interaction or opening the WhatsApp app.
+ */
+export async function sendDirectWhatsAppAlert({
+  phone = '',
+  messageText = '',
+  gatewayType = 'callmebot',
+  apiKey = '',
+  accountSid = '',
+  authToken = '',
+  fromNumber = '',
+  endpointUrl = ''
+}) {
+  if (!phone && !endpointUrl) {
+    return { success: false, error: 'Recipient phone number missing' };
+  }
+
+  try {
+    if (gatewayType === 'callmebot' && apiKey) {
+      // CallMeBot Free WhatsApp API: Sends direct automated WhatsApp message
+      const cleanPhone = phone.replace(/[^0-9+]/g, '');
+      const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(cleanPhone)}&text=${encodeURIComponent(messageText)}&apikey=${encodeURIComponent(apiKey)}`;
+      await fetch(url, { method: 'GET', mode: 'no-cors' });
+      return { success: true, gateway: 'callmebot' };
+    }
+
+    if (gatewayType === 'twilio' && accountSid && authToken && fromNumber) {
+      // Twilio WhatsApp REST API: Directly sends automated WhatsApp message
+      const cleanTo = phone.startsWith('whatsapp:') ? phone : `whatsapp:${phone.replace(/[^0-9+]/g, '')}`;
+      const cleanFrom = fromNumber.startsWith('whatsapp:') ? fromNumber : `whatsapp:${fromNumber.replace(/[^0-9+]/g, '')}`;
+      const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+      
+      const formData = new URLSearchParams();
+      formData.append('To', cleanTo);
+      formData.append('From', cleanFrom);
+      formData.append('Body', messageText);
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData.toString()
+      });
+      const data = await res.json();
+      return { success: res.ok, data, error: data.message };
+    }
+
+    if (endpointUrl) {
+      // Custom WhatsApp Gateway Endpoint (e.g. Meta Graph API, Green API, UltraMsg, or Zapier)
+      const res = await fetch(endpointUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipient: phone,
+          message: messageText,
+          timestamp: Date.now()
+        })
+      });
+      return { success: res.ok, status: res.status };
+    }
+
+    return { success: false, error: 'No automated WhatsApp gateway credentials configured' };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
  * Initiates the delivery lifecycle simulation with realistic carrier progression.
  * Updates listener callback on every stage transition.
  */
@@ -180,12 +250,13 @@ export function dispatchEmergencyToCircle({
   payload,
   webhookUrl = '',
   telegramConfig = null,
+  whatsappConfig = null,
   onContactStatusUpdate = () => {}
 }) {
   const activeContacts = contacts.filter(c => c.name && (c.phone || c.email));
   const trackingRecords = [];
 
-  // Fire Web Notification & Webhook & Telegram in parallel
+  // Fire Web Notification & Webhook & Telegram & Direct WhatsApp in parallel
   sendBrowserNotification('🚨 Aurora Emergency SOS Armed', payload.messageText);
   if (webhookUrl) {
     postToCustomWebhook(webhookUrl, payload);
@@ -195,6 +266,24 @@ export function dispatchEmergencyToCircle({
       botToken: telegramConfig.botToken,
       chatId: telegramConfig.chatId,
       messageText: payload.messageText
+    });
+  }
+
+  // Automated Direct WhatsApp Dispatch to each circle contact with a phone number
+  if (whatsappConfig && whatsappConfig.enabled && activeContacts.length > 0) {
+    activeContacts.forEach(contact => {
+      if (contact.phone) {
+        sendDirectWhatsAppAlert({
+          phone: contact.phone,
+          messageText: payload.messageText,
+          gatewayType: whatsappConfig.gatewayType,
+          apiKey: whatsappConfig.apiKey,
+          accountSid: whatsappConfig.accountSid,
+          authToken: whatsappConfig.authToken,
+          fromNumber: whatsappConfig.fromNumber,
+          endpointUrl: whatsappConfig.endpointUrl
+        });
+      }
     });
   }
 

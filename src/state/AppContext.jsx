@@ -30,12 +30,18 @@ export function AppProvider({ children }) {
   const [privacySettings, setPrivacySettingsState] = useState(() => storage.getPrivacySettings());
   const [webhookUrl, setWebhookUrlState] = useState(() => storage.getWebhookUrl());
   const [telegramConfig, setTelegramConfigState] = useState(() => storage.getTelegramConfig());
+  const [whatsappConfig, setWhatsAppConfigState] = useState(() => storage.getWhatsAppConfig());
   const [geminiApiKey, setGeminiApiKeyState] = useState(() => storage.getGeminiApiKey());
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const setTelegramConfig = useCallback((cfg) => {
     setTelegramConfigState(cfg);
     storage.setTelegramConfig(cfg);
+  }, []);
+
+  const setWhatsAppConfig = useCallback((cfg) => {
+    setWhatsAppConfigState(cfg);
+    storage.setWhatsAppConfig(cfg);
   }, []);
 
   const setGeminiApiKey = useCallback((key) => {
@@ -318,6 +324,7 @@ export function AppProvider({ children }) {
       payload,
       webhookUrl,
       telegramConfig,
+      whatsappConfig,
       onContactStatusUpdate: (record) => {
         setDeliveryRecords(prev => {
           const index = prev.findIndex(r => r.contactId === record.contactId);
@@ -604,6 +611,7 @@ export function AppProvider({ children }) {
       payload,
       webhookUrl,
       telegramConfig,
+      whatsappConfig,
       onContactStatusUpdate: (record) => {
         setDeliveryRecords(prev => {
           const index = prev.findIndex(r => r.contactId === record.contactId);
@@ -618,7 +626,7 @@ export function AppProvider({ children }) {
     });
 
     dispatchCircleNotification('⚡ Non-Emergency Test Dispatch sent through delivery pipeline', 'info');
-  }, [geoSignals, trustedCircle, webhookUrl, telegramConfig, dispatchCircleNotification]);
+  }, [geoSignals, trustedCircle, webhookUrl, telegramConfig, whatsappConfig, dispatchCircleNotification]);
 
   // Recalculate risk whenever effective signals update
   useEffect(() => {
@@ -807,6 +815,8 @@ export function AppProvider({ children }) {
     // 2b. External Cloud API Integrations
     telegramConfig,
     setTelegramConfig,
+    whatsappConfig,
+    setWhatsAppConfig,
     geminiApiKey,
     setGeminiApiKey,
     askGeminiAdvisor: (query) => fetchGeminiSafetyAnalysis({

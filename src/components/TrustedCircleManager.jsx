@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useApp } from '../state/useApp';
-import { sendTelegramAlert } from '../engine/deliveryService';
+import { sendTelegramAlert, sendDirectWhatsAppAlert } from '../engine/deliveryService';
 import './TrustedCircleManager.css';
 
 export default function TrustedCircleManager() {
@@ -12,6 +13,8 @@ export default function TrustedCircleManager() {
     setWebhookUrl,
     telegramConfig,
     setTelegramConfig,
+    whatsappConfig,
+    setWhatsAppConfig,
     triggerTestAlert
   } = useApp();
 
@@ -24,7 +27,17 @@ export default function TrustedCircleManager() {
 
   const [inputWebhook, setInputWebhook] = useState(webhookUrl || '');
   const [inputTelegram, setInputTelegram] = useState(telegramConfig || { botToken: '', chatId: '', enabled: false });
+  const [inputWhatsApp, setInputWhatsApp] = useState(whatsappConfig || {
+    enabled: false,
+    gatewayType: 'callmebot',
+    apiKey: '',
+    accountSid: '',
+    authToken: '',
+    fromNumber: '',
+    endpointUrl: ''
+  });
   const [telegramTestStatus, setTelegramTestStatus] = useState(null);
+  const [whatsAppTestStatus, setWhatsAppTestStatus] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const handleContactChange = (index, field, value) => {
@@ -65,12 +78,37 @@ export default function TrustedCircleManager() {
     }
   };
 
+  const handleTestWhatsApp = async () => {
+    const testPhone = contacts[0]?.phone || '';
+    if (!testPhone && !inputWhatsApp.endpointUrl) {
+      setWhatsAppTestStatus({ ok: false, msg: 'Please enter a phone number in contact #1 or custom endpoint' });
+      return;
+    }
+    setWhatsAppTestStatus({ ok: true, msg: 'Calling WhatsApp Gateway API...' });
+    const res = await sendDirectWhatsAppAlert({
+      phone: testPhone,
+      messageText: '🚨 *AURORA DIRECT EMERGENCY ALERT*\nAutomated crisis dispatch verified without user tapping Send!',
+      gatewayType: inputWhatsApp.gatewayType,
+      apiKey: inputWhatsApp.apiKey,
+      accountSid: inputWhatsApp.accountSid,
+      authToken: inputWhatsApp.authToken,
+      fromNumber: inputWhatsApp.fromNumber,
+      endpointUrl: inputWhatsApp.endpointUrl
+    });
+    if (res.success) {
+      setWhatsAppTestStatus({ ok: true, msg: `✓ Automated alert sent to ${testPhone || 'endpoint'}!` });
+    } else {
+      setWhatsAppTestStatus({ ok: false, msg: `✕ Error: ${res.error || 'Failed to dispatch'}` });
+    }
+  };
+
   const handleSave = (e) => {
     e.preventDefault();
     const valid = contacts.filter(c => c.name.trim());
     setTrustedCircle(valid);
     setWebhookUrl(inputWebhook.trim());
     setTelegramConfig(inputTelegram);
+    setWhatsAppConfig(inputWhatsApp);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 3000);
   };
@@ -232,6 +270,103 @@ export default function TrustedCircleManager() {
             {telegramTestStatus && (
               <span style={{ fontSize: '0.8rem', color: telegramTestStatus.ok ? '#10b981' : '#ef4444' }}>
                 {telegramTestStatus.msg}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Direct Automated WhatsApp Dispatch REST API (Zero User Interaction) */}
+        <div className="webhook-config-block" style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+            <label style={{ margin: 0, fontWeight: 600, color: '#25d366' }}>
+              💬 Direct Automated WhatsApp Dispatch (Zero-Tap Cloud Gateway):
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+              <input
+                type="checkbox"
+                checked={inputWhatsApp.enabled}
+                onChange={(e) => setInputWhatsApp(prev => ({ ...prev, enabled: e.target.checked }))}
+              />
+              Enable Direct WhatsApp
+            </label>
+          </div>
+          <p className="webhook-hint">
+            <strong>CRITICAL CRISIS DEFENSE:</strong> In a real emergency or coercion event, the victim cannot safely unlock their phone and press 'Send' in WhatsApp. With this enabled, Aurora dispatches emergency alerts <strong>directly and silently to your circle's WhatsApp</strong> via Cloud Gateway API without opening any app.
+          </p>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem', marginTop: '0.5rem' }}>
+            <select
+              value={inputWhatsApp.gatewayType}
+              onChange={(e) => setInputWhatsApp(prev => ({ ...prev, gatewayType: e.target.value }))}
+              className="webhook-input-field"
+            >
+              <option value="callmebot">CallMeBot Gateway (Free)</option>
+              <option value="twilio">Twilio WhatsApp API</option>
+              <option value="custom">Custom Webhook / Meta API</option>
+            </select>
+
+            {inputWhatsApp.gatewayType === 'callmebot' && (
+              <input
+                type="password"
+                placeholder="CallMeBot WhatsApp API Key (Free from callmebot.com)"
+                value={inputWhatsApp.apiKey}
+                onChange={(e) => setInputWhatsApp(prev => ({ ...prev, apiKey: e.target.value }))}
+                className="webhook-input-field"
+              />
+            )}
+
+            {inputWhatsApp.gatewayType === 'twilio' && (
+              <input
+                type="text"
+                placeholder="Twilio Account SID"
+                value={inputWhatsApp.accountSid}
+                onChange={(e) => setInputWhatsApp(prev => ({ ...prev, accountSid: e.target.value }))}
+                className="webhook-input-field"
+              />
+            )}
+
+            {inputWhatsApp.gatewayType === 'custom' && (
+              <input
+                type="url"
+                placeholder="https://your-api.com/whatsapp/send-alert"
+                value={inputWhatsApp.endpointUrl}
+                onChange={(e) => setInputWhatsApp(prev => ({ ...prev, endpointUrl: e.target.value }))}
+                className="webhook-input-field"
+              />
+            )}
+          </div>
+
+          {inputWhatsApp.gatewayType === 'twilio' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <input
+                type="password"
+                placeholder="Twilio Auth Token"
+                value={inputWhatsApp.authToken}
+                onChange={(e) => setInputWhatsApp(prev => ({ ...prev, authToken: e.target.value }))}
+                className="webhook-input-field"
+              />
+              <input
+                type="text"
+                placeholder="From Number (e.g. +14155238886)"
+                value={inputWhatsApp.fromNumber}
+                onChange={(e) => setInputWhatsApp(prev => ({ ...prev, fromNumber: e.target.value }))}
+                className="webhook-input-field"
+              />
+            </div>
+          )}
+
+          <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button
+              type="button"
+              className="btn-test-alert"
+              style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem', borderColor: '#25d366', color: '#25d366' }}
+              onClick={handleTestWhatsApp}
+            >
+              Test Direct WhatsApp Dispatch
+            </button>
+            {whatsAppTestStatus && (
+              <span style={{ fontSize: '0.8rem', color: whatsAppTestStatus.ok ? '#10b981' : '#ef4444' }}>
+                {whatsAppTestStatus.msg}
               </span>
             )}
           </div>

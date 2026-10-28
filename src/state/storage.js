@@ -16,6 +16,7 @@ const STORAGE_KEYS = {
   SAFETY_TIMELINE: 'aurora_timeline',
   WEBHOOK_URL: 'aurora_webhook_url',
   TELEGRAM_CONFIG: 'aurora_telegram_config',
+  WHATSAPP_CONFIG: 'aurora_whatsapp_config',
   GEMINI_API_KEY: 'aurora_gemini_api_key',
   // Legacy fallback keys
   LEGACY_SAFE_WORD: 'safesignal_safe_word',
@@ -175,6 +176,29 @@ export const storage = {
   setTelegramConfig: (cfg) => {
     try {
       localStorage.setItem(STORAGE_KEYS.TELEGRAM_CONFIG, JSON.stringify(cfg));
+    } catch {}
+  },
+
+  getWhatsAppConfig: () => {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.WHATSAPP_CONFIG);
+      return data ? JSON.parse(data) : {
+        enabled: false,
+        gatewayType: 'callmebot', // 'callmebot' | 'twilio' | 'custom'
+        apiKey: '',
+        accountSid: '',
+        authToken: '',
+        fromNumber: '',
+        endpointUrl: ''
+      };
+    } catch {
+      return { enabled: false, gatewayType: 'callmebot', apiKey: '', accountSid: '', authToken: '', fromNumber: '', endpointUrl: '' };
+    }
+  },
+
+  setWhatsAppConfig: (cfg) => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.WHATSAPP_CONFIG, JSON.stringify(cfg));
     } catch {}
   },
 

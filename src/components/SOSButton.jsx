@@ -206,13 +206,21 @@ export default function SOSButton() {
               <span className="reason-text">{getReasonLabel(sosReason)}</span>
             </div>
 
-            {/* Direct Dispatch & Broadcast Action Links */}
+            {/* Automated Dispatch Status Banner */}
+            <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '0.6rem 0.8rem', borderRadius: '10px', margin: '0.75rem 0', fontSize: '0.82rem', color: '#6ee7b7', textAlign: 'center' }}>
+              ✓ <strong>AUTOMATED DIRECT DISPATCH FIRED:</strong> Emergency payload dispatched to Trusted Circle via Cloud Gateway (Telegram, Direct WhatsApp & Webhook) without requiring user clicks.
+            </div>
+
+            {/* Direct Dispatch & Broadcast Backup Action Links */}
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Manual Backup Forwarding (Optional):
+            </div>
             <div className="emergency-dispatch-action-row">
               <a href={smsHref} className="btn-dispatch-link link-sms" target="_blank" rel="noreferrer">
-                📱 Send Live SMS to Circle
+                📱 Forward via SMS
               </a>
               <a href={waHref} className="btn-dispatch-link link-wa" target="_blank" rel="noreferrer">
-                💬 Broadcast on WhatsApp
+                💬 Forward via WhatsApp
               </a>
               {typeof navigator !== 'undefined' && navigator.share && (
                 <button type="button" className="btn-dispatch-link link-share" onClick={handleNativeShare}>
