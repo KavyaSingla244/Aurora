@@ -5,7 +5,13 @@ import OnboardingSetup from './components/OnboardingSetup';
 import RiskDisplay from './components/RiskDisplay';
 import CheckInPrompt from './components/CheckInPrompt';
 import JourneyShare from './components/JourneyShare';
-import SimulationPanel from './components/SimulationPanel';
+import SignalAvailabilityDashboard from './components/SignalAvailabilityDashboard';
+import TrustedCircleManager from './components/TrustedCircleManager';
+import EmergencyDeliveryTracker from './components/EmergencyDeliveryTracker';
+import SafetyTimeline from './components/SafetyTimeline';
+import SafePhraseConfig from './components/SafePhraseConfig';
+import PrivacyControls from './components/PrivacyControls';
+import AccessibilityControls from './components/AccessibilityControls';
 import SOSButton from './components/SOSButton';
 import './App.css';
 
@@ -18,25 +24,30 @@ function MainAppContent() {
     timeSignal,
     batterySignal,
     geoSignals,
+    audioDistressSignal,
+    deviceMotionSignal,
+    privacySettings,
     setShowSettingsModal,
     resetToSafeBaseline,
     updateSignals
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState('shield'); // 'shield' | 'journey' | 'circle' | 'telemetry'
+  const [activeTab, setActiveTab] = useState('shield'); // 'shield' | 'journey' | 'circle' | 'timeline' | 'telemetry' | 'settings'
   const [showQuickPresets, setShowQuickPresets] = useState(false);
 
   // Quick preset scenarios for instant judge testing anywhere in the app
   const DEMO_PRESETS = [
-    { label: 'Safe Baseline', icon: '🟢', values: { pace: 'normal', stillnessSeconds: 0, crowdDensity: 'large', routeFamiliarity: 'familiar', batteryLevel: 95, batteryDropType: 'none' } },
-    { label: 'Night Walk', icon: '🌙', values: { pace: 'normal', stillnessSeconds: 0, crowdDensity: 'large', routeFamiliarity: 'familiar', batteryLevel: 80, batteryDropType: 'none' } },
-    { label: 'Deserted Run (High)', icon: '⚠️', values: { pace: 'increasing', stillnessSeconds: 0, crowdDensity: 'none', routeFamiliarity: 'unfamiliar', batteryLevel: 65, batteryDropType: 'none' } },
-    { label: 'Stationary Isolated (High)', icon: '🛑', values: { pace: 'normal', stillnessSeconds: 120, crowdDensity: 'none', routeFamiliarity: 'familiar', batteryLevel: 50, batteryDropType: 'none' } },
-    { label: 'Compound Threat + Battery Drop (Critical)', icon: '🚨', values: { pace: 'running', stillnessSeconds: 0, crowdDensity: 'small', routeFamiliarity: 'unfamiliar', batteryLevel: 8, batteryDropType: 'instant' } }
+    { label: 'Safe Baseline', icon: '🟢', values: { pace: 'normal', stillnessSeconds: 0, crowdDensity: 'large', routeFamiliarity: 'familiar', batteryLevel: 95, batteryDropType: 'none', distressAudio: false, deviceImpact: false } },
+    { label: 'Night Walk', icon: '🌙', values: { pace: 'normal', stillnessSeconds: 0, crowdDensity: 'large', routeFamiliarity: 'familiar', batteryLevel: 80, batteryDropType: 'none', distressAudio: false, deviceImpact: false } },
+    { label: 'Deserted Run (High)', icon: '⚠️', values: { pace: 'increasing', stillnessSeconds: 0, crowdDensity: 'none', routeFamiliarity: 'unfamiliar', batteryLevel: 65, batteryDropType: 'none', distressAudio: false, deviceImpact: false } },
+    { label: 'Stationary Isolated (High)', icon: '🛑', values: { pace: 'normal', stillnessSeconds: 120, crowdDensity: 'none', routeFamiliarity: 'familiar', batteryLevel: 50, batteryDropType: 'none', distressAudio: false, deviceImpact: false } },
+    { label: 'Scream Detected (High)', icon: '🎧', values: { pace: 'normal', stillnessSeconds: 0, crowdDensity: 'none', routeFamiliarity: 'familiar', batteryLevel: 75, batteryDropType: 'none', distressAudio: true, deviceImpact: false } },
+    { label: 'Fall / Impact Detected', icon: '🏃', values: { pace: 'normal', stillnessSeconds: 0, crowdDensity: 'none', routeFamiliarity: 'familiar', batteryLevel: 75, batteryDropType: 'none', distressAudio: false, deviceImpact: true } },
+    { label: 'Compound Threat + Battery Drop (Critical)', icon: '🚨', values: { pace: 'running', stillnessSeconds: 0, crowdDensity: 'small', routeFamiliarity: 'unfamiliar', batteryLevel: 8, batteryDropType: 'instant', distressAudio: true, deviceImpact: true } }
   ];
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${privacySettings?.highContrast ? 'high-contrast-mode' : ''}`}>
       {/* Mobile-Friendly App Container */}
       <div className="app-phone-frame">
         {/* Top App Header & Live Security Bar */}
@@ -49,16 +60,16 @@ function MainAppContent() {
               </div>
               <div>
                 <h1 className="brand-title">Aurora</h1>
-                <span className="brand-subtitle">Personal Guardian AI</span>
+                <span className="brand-subtitle">Adaptive Real-Time Safety Sentinel</span>
               </div>
             </div>
 
             <div className="header-actions">
               <button
                 type="button"
-                className="btn-header-settings"
-                onClick={() => setShowSettingsModal(true)}
-                title="Security & Sharing Settings"
+                className={`btn-header-settings ${activeTab === 'settings' ? 'active-settings' : ''}`}
+                onClick={() => setActiveTab('settings')}
+                title="Security, Privacy & Accessibility Settings"
               >
                 <span className="settings-gear">⚙️</span>
                 <span className="settings-text">Settings</span>
@@ -83,6 +94,10 @@ function MainAppContent() {
 
             <div className={`status-chip ${geoSignals.isGeolocationActive ? 'chip-gps-active' : ''}`} title="GPS Kinematics">
               <span>📍 {geoSignals.isGeolocationActive ? `${geoSignals.speedKmh} km/h` : 'GPS Fallback'}</span>
+            </div>
+
+            <div className={`status-chip ${audioDistressSignal.permissionStatus === 'granted' ? 'chip-audio-active' : ''}`} title="Acoustic Sentinel">
+              <span>🎧 {audioDistressSignal.permissionStatus === 'granted' ? 'Mic Active' : 'Audio Standby'}</span>
             </div>
           </div>
         </header>
@@ -116,16 +131,34 @@ function MainAppContent() {
             onClick={() => setActiveTab('circle')}
           >
             <span className="tab-icon">👥</span>
-            <span className="tab-title">Circle & Zones</span>
+            <span className="tab-title">Circle & Dispatch</span>
           </button>
 
           <button
             type="button"
-            className={`nav-tab-btn nav-tab-inspector ${activeTab === 'telemetry' ? 'active' : ''}`}
+            className={`nav-tab-btn ${activeTab === 'timeline' ? 'active' : ''}`}
+            onClick={() => setActiveTab('timeline')}
+          >
+            <span className="tab-icon">📜</span>
+            <span className="tab-title">Timeline</span>
+          </button>
+
+          <button
+            type="button"
+            className={`nav-tab-btn ${activeTab === 'telemetry' ? 'active' : ''}`}
             onClick={() => setActiveTab('telemetry')}
           >
             <span className="tab-icon">🧪</span>
-            <span className="tab-title">Telemetry Lab</span>
+            <span className="tab-title">Signal Lab</span>
+          </button>
+
+          <button
+            type="button"
+            className={`nav-tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            <span className="tab-icon">⚙️</span>
+            <span className="tab-title">Privacy</span>
           </button>
         </nav>
 
@@ -144,17 +177,26 @@ function MainAppContent() {
                 <div className="quick-action-card" onClick={() => setActiveTab('journey')}>
                   <div className="quick-card-icon">📍</div>
                   <div className="quick-card-content">
-                    <h4>Heading Somewhere?</h4>
-                    <p>Start a time-boxed Live Journey Share with your Circle.</p>
+                    <h4>Live Walk & Map</h4>
+                    <p>Track your live route with Leaflet OpenStreetMap and 500m geofence zones.</p>
                   </div>
                   <span className="quick-card-arrow">→</span>
                 </div>
 
-                <div className="quick-action-card" onClick={() => setShowSettingsModal(true)}>
+                <div className="quick-action-card" onClick={() => setActiveTab('circle')}>
+                  <div className="quick-card-icon">📡</div>
+                  <div className="quick-card-content">
+                    <h4>Delivery Pipeline Status</h4>
+                    <p>Track real-time carrier acknowledgment for emergency broadcasts.</p>
+                  </div>
+                  <span className="quick-card-arrow">→</span>
+                </div>
+
+                <div className="quick-action-card" onClick={() => setActiveTab('settings')}>
                   <div className="quick-card-icon">🛡️</div>
                   <div className="quick-card-content">
-                    <h4>Safe Word Armed</h4>
-                    <p>{safeWord ? `Active (${safeWord.length} chars) • Anti-coercion ready` : 'Click to configure safe word'}</p>
+                    <h4>Safe Phrase Armed</h4>
+                    <p>{safeWord ? `Active (${safeWord.length} chars) • Duress & Voice trigger ready` : 'Click to configure safe phrase'}</p>
                   </div>
                   <span className="quick-card-arrow">⚙️</span>
                 </div>
@@ -162,114 +204,41 @@ function MainAppContent() {
             </div>
           )}
 
-          {/* TAB 2: LIVE JOURNEY SHARING */}
+          {/* TAB 2: LIVE JOURNEY SHARING & MAP */}
           {activeTab === 'journey' && (
             <div className="tab-view-container animate-fade-in">
               <JourneyShare />
             </div>
           )}
 
-          {/* TAB 3: CIRCLE & GEOFENCED ZONES */}
+          {/* TAB 3: CIRCLE & EMERGENCY DISPATCH STATUS */}
           {activeTab === 'circle' && (
             <div className="tab-view-container animate-fade-in circle-zones-view">
-              <div className="section-card">
-                <div className="section-card-header">
-                  <div className="section-title-wrap">
-                    <span className="section-icon">👥</span>
-                    <div>
-                      <h3>Trusted Circle Contacts</h3>
-                      <p>Emergency recipients in Connected Mode</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn-card-action"
-                    onClick={() => setShowSettingsModal(true)}
-                  >
-                    Edit Circle
-                  </button>
-                </div>
-
-                {trustedCircle.filter(c => c.name.trim()).length > 0 ? (
-                  <div className="circle-member-list">
-                    {trustedCircle.filter(c => c.name.trim()).map((contact, i) => (
-                      <div key={i} className="circle-member-item">
-                        <div className="member-avatar">{contact.name.charAt(0).toUpperCase()}</div>
-                        <div className="member-details">
-                          <span className="member-name">{contact.name}</span>
-                          <span className="member-phone">{contact.phone || 'SMS Alert Enabled'}</span>
-                        </div>
-                        <span className="member-badge">Active Link</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="empty-state-box">
-                    <p>No contacts added yet. {mode === 'Solo' ? 'You are currently in Solo Mode.' : 'Add 1-3 contacts to enable emergency broadcasting.'}</p>
-                    <button
-                      type="button"
-                      className="btn-inline-link"
-                      onClick={() => setShowSettingsModal(true)}
-                    >
-                      + Configure Trusted Circle
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="section-card">
-                <div className="section-card-header">
-                  <div className="section-title-wrap">
-                    <span className="section-icon">📍</span>
-                    <div>
-                      <h3>Geofenced Safety Zones</h3>
-                      <p>500m radius around familiar places</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn-card-action"
-                    onClick={() => setShowSettingsModal(true)}
-                  >
-                    Manage Places
-                  </button>
-                </div>
-
-                {familiarPlaces.length > 0 ? (
-                  <div className="places-chip-list">
-                    {familiarPlaces.map((place, i) => (
-                      <div key={i} className="place-chip-card">
-                        <div className="place-icon-wrap">🏡</div>
-                        <div className="place-info">
-                          <span className="place-name">{place.name}</span>
-                          <span className="place-geo">
-                            {place.latitude ? `${place.latitude.toFixed(4)}, ${place.longitude.toFixed(4)}` : 'Coordinates pending'}
-                          </span>
-                        </div>
-                        <span className="place-radius-pill">500m Zone</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="empty-state-box">
-                    <p>No familiar places saved. Save Home, Work, or Campus to automatically verify route familiarity.</p>
-                    <button
-                      type="button"
-                      className="btn-inline-link"
-                      onClick={() => setShowSettingsModal(true)}
-                    >
-                      + Add Familiar Place
-                    </button>
-                  </div>
-                )}
-              </div>
+              <TrustedCircleManager />
+              <EmergencyDeliveryTracker />
             </div>
           )}
 
-          {/* TAB 4: TELEMETRY LAB & SENSOR INSPECTION (For Developers & Judges) */}
+          {/* TAB 4: SAFETY TIMELINE & AUDIT LOG */}
+          {activeTab === 'timeline' && (
+            <div className="tab-view-container animate-fade-in">
+              <SafetyTimeline />
+            </div>
+          )}
+
+          {/* TAB 5: SIGNAL AVAILABILITY & TELEMETRY LAB */}
           {activeTab === 'telemetry' && (
             <div className="tab-view-container animate-fade-in">
-              <SimulationPanel />
+              <SignalAvailabilityDashboard />
+            </div>
+          )}
+
+          {/* TAB 6: SECURITY, PRIVACY & ACCESSIBILITY CONFIG */}
+          {activeTab === 'settings' && (
+            <div className="tab-view-container animate-fade-in settings-view-wrapper">
+              <SafePhraseConfig />
+              <PrivacyControls />
+              <AccessibilityControls />
             </div>
           )}
         </main>

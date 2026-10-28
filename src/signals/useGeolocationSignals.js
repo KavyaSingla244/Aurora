@@ -5,7 +5,8 @@ import {
   determinePaceFromSpeed,
   findNearestFamiliarPlace,
   GPS_STILLNESS_JITTER_METERS,
-  FAMILIAR_RADIUS_METERS
+  FAMILIAR_RADIUS_METERS,
+  reverseGeocodeCoords
 } from './geoUtils';
 
 /**
@@ -27,6 +28,10 @@ export function useGeolocationSignals({
   const [nearestPlaceInfo, setNearestPlaceInfo] = useState(null);
   const [fallbackReason, setFallbackReason] = useState('Live GPS telemetry not started — using manual simulation.');
 
+  const [currentAddress, setCurrentAddress] = useState('Acquiring location...');
+  const [routeBreadcrumbs, setRouteBreadcrumbs] = useState([]);
+  const [journeyAnomaly, setJourneyAnomaly] = useState(null);
+
   const watchIdRef = useRef(null);
   const lastPositionRef = useRef(null); // { latitude, longitude, timestamp }
   const lastMovementTimeRef = useRef(0);
@@ -43,6 +48,16 @@ export function useGeolocationSignals({
       const lastMove = lastMovementTimeRef.current || now;
       const elapsedStillness = Math.floor((now - lastMove) / 1000);
       setGpsStillnessSeconds(elapsedStillness);
+
+      // Anomaly detection: Prolonged stillness (> 50s) while actively traveling
+      if (elapsedStillness >= 50) {
+        setJourneyAnomaly({
+          type: 'prolonged_stillness',
+          message: `Stationary for ${elapsedStillness}s in transit — safety check-in advised`
+        });
+      } else {
+        setJourneyAnomaly(null);
+      }
     }, 1000);
 
     return () => clearInterval(interval);
@@ -54,6 +69,20 @@ export function useGeolocationSignals({
     const now = position.timestamp || Date.now();
     const currentCoords = { latitude, longitude, accuracy };
     setCoordinates(currentCoords);
+
+    // Append to breadcrumb trail (up to 150 points)
+    setRouteBreadcrumbs(prev => {
+      const lastPoint = prev[prev.length - 1];
+      if (lastPoint && calculateHaversineDistanceMeters(lastPoint.latitude, lastPoint.longitude, latitude, longitude) < 4) {
+        return prev;
+      }
+      return [...prev.slice(-149), { latitude, longitude, speed: speed || 0, timestamp: now }];
+    });
+
+    // Asynchronously resolve address via Nominatim
+    reverseGeocodeCoords(latitude, longitude).then(addr => {
+      if (addr) setCurrentAddress(addr);
+    }).catch(() => {});
 
     let calculatedSpeed = 0;
 
@@ -203,6 +232,15 @@ export function useGeolocationSignals({
     routeFamiliarity: (isGeolocationActive && savedPlaces.length > 0) ? gpsRouteFamiliarity : manualRouteFamiliarity,
     nearestPlaceInfo,
     fallbackReason,
-    FAMILIAR_RADIUS_METERS
+    FAMILIAR_RADIUS_METERS,
+    currentAddress,
+    routeBreadcrumbs,
+    journeyAnomaly,
+    simulatePosition: (lat, lon, spd = 4) => {
+      handlePositionSuccess({
+        coords: { latitude: lat, longitude: lon, accuracy: 8, speed: spd / 3.6 },
+        timestamp: Date.now()
+      });
+    }
   };
 }

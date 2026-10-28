@@ -36,7 +36,12 @@ export const WEIGHTS = {
   BATTERY_LOW_GRADUAL: 8,      // Depleted power reserve (< 20%) limiting rescue connectivity
 
   // Proactive User Protection
-  JOURNEY_SHARE_ACTIVE: -5     // Live session actively monitored by Trusted Circle (slight offset)
+  JOURNEY_SHARE_ACTIVE: -5,    // Live session actively monitored by Trusted Circle (slight offset)
+
+  // Real Sensor Hardware Additions
+  DISTRESS_AUDIO: 35,          // Acoustic distress / screaming detected via Web Audio API
+  DEVICE_IMPACT: 25,           // Sudden physical shock / fall detected via DeviceMotionEvent
+  NETWORK_OFFLINE: 10          // Loss of network connectivity during active journey
 };
 
 /**
@@ -120,12 +125,36 @@ export function calculateRiskScore(signals = {}, previousScore = 0, secondsElaps
     routeFamiliarity = 'familiar',
     batteryLevel = 100,
     batteryDropType = 'none',
-    journeyShareActive = false
+    journeyShareActive = false,
+    distressAudio = false,
+    deviceImpact = false,
+    networkOffline = false
   } = signals;
 
   const contributingFactors = [];
   let baseScore = 0;
   let activeRiskSignalsCount = 0;
+
+  // Real Hardware Sensor: Acoustic Distress Detection (Web Audio API)
+  if (distressAudio) {
+    baseScore += WEIGHTS.DISTRESS_AUDIO;
+    activeRiskSignalsCount += 1;
+    contributingFactors.push(`Ambient distress sound / scream signature detected (+${WEIGHTS.DISTRESS_AUDIO} pts)`);
+  }
+
+  // Real Hardware Sensor: Device Impact / Fall Detection (DeviceMotionEvent)
+  if (deviceImpact) {
+    baseScore += WEIGHTS.DEVICE_IMPACT;
+    activeRiskSignalsCount += 1;
+    contributingFactors.push(`Sudden physical impact or violent fall detected (+${WEIGHTS.DEVICE_IMPACT} pts)`);
+  }
+
+  // Real Hardware Sensor: Network Disconnection during transit
+  if (networkOffline && journeyShareActive) {
+    baseScore += WEIGHTS.NETWORK_OFFLINE;
+    activeRiskSignalsCount += 1;
+    contributingFactors.push(`Network connection lost during active journey (+${WEIGHTS.NETWORK_OFFLINE} pts)`);
+  }
 
   // 1. Movement & Pace Evaluation
   if (pace === 'running') {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../state/useApp';
+import JourneyMap from './JourneyMap';
 import './JourneyShare.css';
 
 export default function JourneyShare() {
@@ -11,11 +12,13 @@ export default function JourneyShare() {
     circleNotifications,
     getCircleNames,
     setShowSettingsModal,
-    geoSignals
+    geoSignals,
+    familiarPlaces
   } = useApp();
 
   const [customLabel, setCustomLabel] = useState('');
   const [currentTime, setCurrentTime] = useState(0);
+  const [copyStatus, setCopyStatus] = useState('');
 
   useEffect(() => {
     if (!journey.isActive || !journey.startedAt) return;
@@ -37,37 +40,36 @@ export default function JourneyShare() {
     return `${mins}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // If in Solo Mode, render a sleek informational card explaining sharing model
-  if (mode === 'Solo') {
-    return (
-      <div className="journey-view-shell" id="journey-share">
-        <div className="solo-mode-guard-card">
-          <div className="solo-shield-header">
-            <span className="solo-shield-icon">👤</span>
-            <div>
-              <h3>Solo Mode Active</h3>
-              <p>On-Device Privacy Mode</p>
-            </div>
-          </div>
-          <p className="solo-mode-explainer">
-            In <strong>Solo Mode</strong>, telemetry and threat assessments stay strictly on-device. If you want your <strong>Trusted Circle</strong> to receive live transit updates and emergency broadcasts, enable Connected Mode.
-          </p>
-          <button
-            type="button"
-            className="btn-enable-connected"
-            onClick={() => setShowSettingsModal(true)}
-          >
-            Switch to Connected Mode →
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const handleStart = (e) => {
     e.preventDefault();
     startJourney(customLabel || 'Heading Home');
     setCustomLabel('');
+  };
+
+  const handleShareLink = async () => {
+    const lat = geoSignals.coordinates?.latitude || 28.6139;
+    const lng = geoSignals.coordinates?.longitude || 77.2090;
+    const shareUrl = `${window.location.origin}?track=${encodeURIComponent(journey.label)}&lat=${lat}&lng=${lng}`;
+    const shareData = {
+      title: `Aurora Live Journey: ${journey.label}`,
+      text: `Track my live safety transit session "${journey.label}". I am currently near ${geoSignals.currentAddress}.`,
+      url: shareUrl
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch {
+        // Fallback to clipboard
+      }
+    }
+
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopyStatus('✓ Link copied to clipboard!');
+      setTimeout(() => setCopyStatus(''), 3500);
+    }
   };
 
   const circleNames = getCircleNames();
@@ -75,14 +77,45 @@ export default function JourneyShare() {
   return (
     <div className="journey-view-shell" id="journey-share">
       
-      {/* 1. Main Journey Live Card */}
+      {/* 1. Main Interactive Journey Map */}
+      <JourneyMap
+        coordinates={geoSignals.coordinates}
+        breadcrumbs={geoSignals.routeBreadcrumbs}
+        savedPlaces={familiarPlaces}
+        currentAddress={geoSignals.currentAddress}
+        speedKmh={geoSignals.speedKmh}
+        pace={geoSignals.pace}
+        stillnessSeconds={geoSignals.stillnessSeconds}
+        isTracking={geoSignals.isGeolocationActive}
+      />
+
+      {/* Feature 2: Unusual Pattern / Anomaly Alert Banner */}
+      {geoSignals.journeyAnomaly && (
+        <div className="journey-anomaly-alert-card animate-fade-in">
+          <div className="anomaly-alert-header">
+            <span className="anomaly-icon">⚠️</span>
+            <div className="anomaly-text-wrap">
+              <h4>Unusual Pattern Detected in Journey</h4>
+              <p>{geoSignals.journeyAnomaly.message}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Main Journey Live Card */}
       <div className={`journey-companion-card ${journey.isActive ? 'card-journey-active' : ''}`}>
         <div className="journey-card-top">
           <div className="journey-title-wrap">
             <span className="journey-live-icon">{journey.isActive ? '🛰️' : '📍'}</span>
             <div>
               <h3>Live Journey Companion</h3>
-              <p className="circle-recipient-text">Connected with: <strong>{circleNames}</strong></p>
+              <p className="circle-recipient-text">
+                {mode === 'Connected' ? (
+                  <>Connected with: <strong>{circleNames}</strong></>
+                ) : (
+                  <>Solo Mode: <strong>On-Device Privacy Mode</strong></>
+                )}
+              </p>
             </div>
           </div>
           {journey.isActive ? (
@@ -95,35 +128,20 @@ export default function JourneyShare() {
           )}
         </div>
 
-        {/* Live Route Visual Progress Tracker (when active) */}
+        {/* Live Metrics Row */}
         {journey.isActive && (
-          <div className="transit-visualizer">
-            <div className="transit-map-preview">
-              <div className="map-grid-lines" />
-              <div className="transit-route-line">
-                <div className="route-pulse-runner" />
-              </div>
-              <div className="route-node origin">
-                <span>📍 Origin</span>
-              </div>
-              <div className="route-node destination">
-                <span>🏡 Destination</span>
-              </div>
+          <div className="transit-stats-row">
+            <div className="transit-stat-block">
+              <span className="stat-label">Elapsed Time</span>
+              <span className="stat-val timer-highlight">{formatElapsed(elapsedSeconds)}</span>
             </div>
-
-            <div className="transit-stats-row">
-              <div className="transit-stat-block">
-                <span className="stat-label">Elapsed Time</span>
-                <span className="stat-val timer-highlight">{formatElapsed(elapsedSeconds)}</span>
-              </div>
-              <div className="transit-stat-block">
-                <span className="stat-label">Current Velocity</span>
-                <span className="stat-val">{geoSignals.isGeolocationActive ? `${geoSignals.speedKmh} km/h` : '3.8 km/h'}</span>
-              </div>
-              <div className="transit-stat-block">
-                <span className="stat-label">Circle Link</span>
-                <span className="stat-val status-online">Connected</span>
-              </div>
+            <div className="transit-stat-block">
+              <span className="stat-label">Current Velocity</span>
+              <span className="stat-val font-mono">{geoSignals.speedKmh} km/h</span>
+            </div>
+            <div className="transit-stat-block">
+              <span className="stat-label">Breadcrumb GPS Fixes</span>
+              <span className="stat-val font-mono">{geoSignals.routeBreadcrumbs.length} pts</span>
             </div>
           </div>
         )}
@@ -131,15 +149,28 @@ export default function JourneyShare() {
         {journey.isActive ? (
           <div className="journey-active-actions">
             <p className="journey-active-hint">
-              Streaming live threat advisories for <strong>"{journey.label}"</strong>. Your circle is notified automatically if your threat level changes.
+              Streaming live threat advisories for <strong>"{journey.label}"</strong>. Your circle is notified automatically if your threat level shifts.
             </p>
-            <button
-              type="button"
-              className="btn-complete-journey"
-              onClick={endJourney}
-            >
-              🏠 I've Arrived Safely (End Walk)
-            </button>
+
+            <div className="journey-btn-group">
+              <button
+                type="button"
+                className="btn-share-live-link"
+                onClick={handleShareLink}
+              >
+                🔗 Share Live Tracking Link
+              </button>
+
+              <button
+                type="button"
+                className="btn-complete-journey"
+                onClick={endJourney}
+              >
+                🏠 I've Arrived Safely (End Walk)
+              </button>
+            </div>
+
+            {copyStatus && <span className="copy-confirm-text">{copyStatus}</span>}
           </div>
         ) : (
           <div className="journey-start-section">
@@ -162,7 +193,7 @@ export default function JourneyShare() {
         )}
       </div>
 
-      {/* 2. Simulated Circle Notification Stream */}
+      {/* 3. Live Notification Feed */}
       {circleNotifications.length > 0 && (
         <div className="simulated-toast-stream">
           <div className="stream-header">

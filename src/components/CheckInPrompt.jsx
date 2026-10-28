@@ -1,10 +1,11 @@
 /**
- * Aurora - CheckInPrompt (Full Anti-Coercion Retry Pipeline)
+ * Aurora - CheckInPrompt (Anti-Coercion Voice & Text Check-in Pipeline)
  * 
  * DESIGN PRINCIPLES:
  * 1. Default-Secure: Only exact safe word stands down the alert.
- * 2. Anti-Coercion: Any wrong word or generic "I'm fine" is treated as coercion under duress -> Instant SOS.
- * 3. Silence Escalation: Complete silence (no response) gives 3 progressive retry windows before automated SOS dispatch.
+ * 2. Anti-Coercion: Any wrong word, generic "I'm fine", or duress phrase triggers INSTANT EMERGENCY SOS.
+ * 3. Silence Escalation: Complete silence gives 3 progressive retry windows before automated SOS dispatch.
+ * 4. Multimodal Accessibility: Voice response via Web Speech API or discreet text input fallback.
  */
 
 import React, { useState } from 'react';
@@ -21,7 +22,8 @@ export default function CheckInPrompt() {
     countdown,
     checkInFeedback,
     submitCheckIn,
-    isSOSActive
+    isSOSActive,
+    speechEngine
   } = useApp();
 
   const [inputWord, setInputWord] = useState('');
@@ -51,11 +53,16 @@ export default function CheckInPrompt() {
 
     /**
      * ANTI-COERCION PROTOCOL:
-     * We pass input directly to submitCheckIn.
-     * If input != safeWord, submitCheckIn triggers instant SOS immediately.
+     * If input != safeWord (or matches duressWord), submitCheckIn triggers instant SOS immediately.
      */
     submitCheckIn(inputWord);
     setInputWord('');
+  };
+
+  const handleVoiceResponse = () => {
+    if (speechEngine.sttSupported) {
+      speechEngine.startListening();
+    }
   };
 
   // If waiting in gap interval between attempts
@@ -73,7 +80,7 @@ export default function CheckInPrompt() {
           </div>
         </div>
         <p className="checkin-subtext">
-          Silently giving time before retry {currentAttempt + 1}. If unanswered after {CHECKIN_MAX_ATTEMPTS} attempts, Emergency SOS will automatically trigger.
+          Silently waiting before retry {currentAttempt + 1}. If unanswered after {CHECKIN_MAX_ATTEMPTS} attempts, Emergency SOS will automatically trigger.
         </p>
       </div>
     );
@@ -92,7 +99,7 @@ export default function CheckInPrompt() {
             <span className="checkin-eyebrow">SAFETY CHECK-IN REQUIRED</span>
             <span className="attempt-badge">Attempt {currentAttempt} of {CHECKIN_MAX_ATTEMPTS}</span>
           </div>
-          <h3 className="checkin-prompt-title">Are you safe? Enter verification phrase</h3>
+          <h3 className="checkin-prompt-title">Are you safe? Speak or enter your secret safe word</h3>
         </div>
         <div className="countdown-pill active">
           ⏱️ {countdown}s remaining
@@ -100,8 +107,8 @@ export default function CheckInPrompt() {
       </div>
 
       <p className="checkin-guidance">
-        Enter your secret safe word to stand down this alert. 
-        <span className="coercion-warning-inline"> (Typing incorrect words or generic phrases immediately arms Emergency SOS).</span>
+        Speak or type your secret safe word to stand down this alert. 
+        <span className="coercion-warning-inline"> (Typing incorrect words, duress phrase, or generic phrases immediately arms Emergency SOS).</span>
       </p>
 
       {/* Progress Bar for Current Window */}
@@ -116,13 +123,25 @@ export default function CheckInPrompt() {
         <div className="checkin-input-wrapper">
           <input
             type="text"
-            placeholder="Type safe word to confirm safety..."
+            placeholder="Type secret safe word to confirm safety..."
             value={inputWord}
             onChange={(e) => setInputWord(e.target.value)}
             className="checkin-text-input"
             autoFocus
             autoComplete="off"
           />
+
+          {speechEngine.sttSupported && (
+            <button
+              type="button"
+              className={`btn-checkin-voice ${speechEngine.isListening ? 'listening' : ''}`}
+              onClick={handleVoiceResponse}
+              title="Speak safe word using microphone"
+            >
+              🎙️ {speechEngine.isListening ? 'Listening...' : 'Speak'}
+            </button>
+          )}
+
           <button type="submit" className="btn-checkin-submit">
             Confirm Safe Word ↵
           </button>

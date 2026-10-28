@@ -2,11 +2,12 @@
  * Aurora - Emergency SOS Component
  * 
  * DESIGN PRINCIPLES:
- * 1. Independent & Always-Available: Fixed red SOS trigger accessible regardless of current tier or pipeline state.
- * 2. Accidental Trigger Defense: 1-second press-and-hold required for manual user tap.
- * 3. Unified SOS State: Automatic triggers (from CheckInPrompt coercion/silence) invoke the exact same state without requiring hold.
- * 4. Transparent Emergency Dialing: Uses tel:112 & tel:100 tap-to-call links — no fake dialer simulations.
+ * 1. Independent & Always-Available: Fixed red SOS trigger accessible anywhere.
+ * 2. Accidental Trigger Defense: 1-second press-and-hold (or instant tap if accessibility mode enabled).
+ * 3. Unified SOS State: Automatic triggers invoke identical secure state.
+ * 4. Transparent Emergency Dialing & Dispatch: Real tel:112/100 links, SMS broadcast, WhatsApp, Web Share, Webhook.
  * 5. Default-Secure Stand-Down: Disarming active SOS requires exact safe-word confirmation.
+ * 6. Live Siren Control & Delivery Status Tracking: Audible siren toggle and real-time contact delivery receipts.
  */
 
 import React, { useState, useRef } from 'react';
@@ -18,20 +19,33 @@ export default function SOSButton() {
     isSOSActive,
     sosReason,
     triggerSOS,
-    standDownSOS
+    standDownSOS,
+    privacySettings,
+    emergencyPayload,
+    deliveryRecords,
+    sirenController,
+    trustedCircle
   } = useApp();
 
   const [holdProgress, setHoldProgress] = useState(0); // 0 to 100
   const [standDownInput, setStandDownInput] = useState('');
   const [standDownError, setStandDownError] = useState('');
+  const [isSirenMuted, setIsSirenMuted] = useState(false);
 
   const holdIntervalRef = useRef(null);
   const holdStartTimeRef = useRef(0);
   const HOLD_DURATION_MS = 1000; // 1 second hold
 
+  // Click handler for instant tap mode (Accessibility Assist)
+  const handleClick = () => {
+    if (privacySettings.instantSosTap && !isSOSActive) {
+      triggerSOS('manual_tap');
+    }
+  };
+
   // Press & Hold Handlers
   const startHold = () => {
-    if (isSOSActive) return;
+    if (isSOSActive || privacySettings.instantSosTap) return;
     holdStartTimeRef.current = Date.now();
     setHoldProgress(0);
 
@@ -57,6 +71,30 @@ export default function SOSButton() {
     setHoldProgress(0);
   };
 
+  // Toggle siren in modal
+  const handleToggleSiren = () => {
+    if (isSirenMuted) {
+      sirenController.startSiren();
+      setIsSirenMuted(false);
+    } else {
+      sirenController.stopSiren();
+      setIsSirenMuted(true);
+    }
+  };
+
+  // Native share trigger
+  const handleNativeShare = async () => {
+    if (emergencyPayload && navigator.share) {
+      try {
+        await navigator.share({
+          title: '🚨 Aurora Emergency Alert',
+          text: emergencyPayload.messageText,
+          url: emergencyPayload.mapsLink
+        });
+      } catch {}
+    }
+  };
+
   // Safe-Word Stand-Down Handler
   const handleStandDown = (e) => {
     e.preventDefault();
@@ -74,15 +112,24 @@ export default function SOSButton() {
   const getReasonLabel = (reason) => {
     switch (reason) {
       case 'manual':
-        return 'Manual User SOS (1-Second Press & Hold)';
+      case 'manual_tap':
+        return 'Manual User SOS Activation';
       case 'coercion_wrong_word':
-        return 'Anti-Coercion Protocol (Incorrect Safe-Word / Coercion Signal)';
+        return 'Anti-Coercion Protocol (Incorrect Safe-Word or Duress Word)';
       case 'silence_timeout':
         return 'Silence Escalation (3 Consecutive Unanswered Check-In Windows)';
+      case 'voice_trigger':
+        return 'Hands-Free Voice Hotphrase Activation ("AURORA HELP ME")';
+      case 'ambient_distress':
+        return 'Ambient Acoustic Distress Sound / Scream Detected';
       default:
         return 'Critical Safety Escalation';
     }
   };
+
+  const alertText = emergencyPayload?.messageText || 'Emergency alert active';
+  const smsHref = `sms:?body=${encodeURIComponent(alertText)}`;
+  const waHref = `https://wa.me/?text=${encodeURIComponent(alertText)}`;
 
   return (
     <>
@@ -91,12 +138,13 @@ export default function SOSButton() {
         <button
           type="button"
           className={`sos-floating-btn ${isSOSActive ? 'sos-active-pulse' : ''} ${holdProgress > 0 ? 'holding' : ''}`}
+          onClick={handleClick}
           onMouseDown={startHold}
           onMouseUp={cancelHold}
           onMouseLeave={cancelHold}
           onTouchStart={startHold}
           onTouchEnd={cancelHold}
-          title={isSOSActive ? 'Emergency Active' : 'Press and hold 1 second for Emergency SOS'}
+          title={isSOSActive ? 'Emergency Active' : privacySettings.instantSosTap ? 'Tap for Emergency SOS' : 'Press and hold 1 second for Emergency SOS'}
         >
           <div className="sos-btn-content">
             <span className="sos-icon">🚨</span>
@@ -104,7 +152,7 @@ export default function SOSButton() {
           </div>
 
           {/* Radial progress ring during press-and-hold */}
-          {holdProgress > 0 && !isSOSActive && (
+          {holdProgress > 0 && !isSOSActive && !privacySettings.instantSosTap && (
             <svg className="sos-hold-ring" viewBox="0 0 100 100">
               <circle
                 cx="50"
@@ -126,7 +174,7 @@ export default function SOSButton() {
           )}
         </button>
         <span className="sos-help-hint">
-          {isSOSActive ? '🚨 ALERT ACTIVE' : holdProgress > 0 ? 'Hold 1s...' : 'Hold 1s for SOS'}
+          {isSOSActive ? '🚨 ALERT ACTIVE' : privacySettings.instantSosTap ? 'Tap for SOS' : holdProgress > 0 ? 'Hold 1s...' : 'Hold 1s for SOS'}
         </span>
       </div>
 
@@ -138,7 +186,17 @@ export default function SOSButton() {
             <div className="emergency-card-header">
               <div className="emergency-siren-badge">🚨</div>
               <h2>CRITICAL EMERGENCY ACTIVE</h2>
-              <p className="emergency-subtitle">Simulated Alert Broadcasted to Trusted Circle</p>
+              <p className="emergency-subtitle">Alert Broadcast to Trusted Circle & Emergency Lifelines Armed</p>
+
+              {/* Siren Audio Toggle */}
+              <button
+                type="button"
+                className={`btn-siren-mute-toggle ${isSirenMuted ? 'muted' : 'sounding'}`}
+                onClick={handleToggleSiren}
+                title="Toggle audible emergency siren"
+              >
+                {isSirenMuted ? '🔇 Siren Muted (Click to Sound Alarm)' : '🔊 Audible Alarm Sounding (Click to Silence)'}
+              </button>
             </div>
 
             {/* Trigger Reason */}
@@ -147,9 +205,39 @@ export default function SOSButton() {
               <span className="reason-text">{getReasonLabel(sosReason)}</span>
             </div>
 
-            {/* Tap-to-Call Links */}
+            {/* Direct Dispatch & Broadcast Action Links */}
+            <div className="emergency-dispatch-action-row">
+              <a href={smsHref} className="btn-dispatch-link link-sms" target="_blank" rel="noreferrer">
+                📱 Send Live SMS to Circle
+              </a>
+              <a href={waHref} className="btn-dispatch-link link-wa" target="_blank" rel="noreferrer">
+                💬 Broadcast on WhatsApp
+              </a>
+              {typeof navigator !== 'undefined' && navigator.share && (
+                <button type="button" className="btn-dispatch-link link-share" onClick={handleNativeShare}>
+                  🔗 Native Share
+                </button>
+              )}
+            </div>
+
+            {/* Feature 17: Emergency Delivery Status Live Tracker */}
+            {deliveryRecords.length > 0 && (
+              <div className="modal-delivery-status-box">
+                <span className="delivery-status-title">📡 Live Delivery Pipeline:</span>
+                <div className="modal-delivery-items">
+                  {deliveryRecords.map((rec, i) => (
+                    <div key={i} className="modal-delivery-item">
+                      <span className="contact-name">{rec.contactName}:</span>
+                      <span className={`status-tag tag-${rec.stage.toLowerCase()}`}>{rec.stage}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tap-to-Call Emergency Services */}
             <div className="emergency-call-section">
-              <span className="call-section-title">DIRECT EMERGENCY DISPATCH (INDIA)</span>
+              <span className="call-section-title">DIRECT EMERGENCY DISPATCH</span>
               <div className="emergency-call-grid">
                 <a href="tel:112" className="emergency-call-btn call-112">
                   <span className="call-icon">📞</span>

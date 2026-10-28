@@ -162,6 +162,12 @@
   background: #eff6ff;
 }
 
+.chip-audio-active {
+  border-color: #a7f3d0;
+  color: #065f46;
+  background: #ecfdf5;
+}
+
 /* Navigation Tabs */
 .app-navigation-tabs {
   display: flex;
@@ -169,21 +175,34 @@
   padding: 6px;
   gap: 4px;
   border-bottom: 1px solid var(--border-glass);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.app-navigation-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-tab-btn {
   flex: 1;
+  min-width: 65px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px 4px;
+  gap: 3px;
+  padding: 8px 4px;
   border-radius: 12px;
   background: transparent;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
+  white-space: nowrap;
   transition: all 0.2s ease;
+}
+
+.nav-tab-btn .tab-icon {
+  font-size: 15px;
 }
 
 .nav-tab-btn:hover {
@@ -193,7 +212,7 @@
 
 .nav-tab-btn.active {
   background: #ffffff;
-  color: var(--text-highlight);
+  color: #2563eb;
   border: 1px solid var(--border-glass);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
@@ -596,4 +615,49 @@
   background: #d1fae5;
   border-color: #6ee7b7;
 }
+
+/* Settings View Wrapper */
+.settings-view-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.active-settings {
+  background: #eff6ff !important;
+  border-color: #3b82f6 !important;
+  color: #1d4ed8 !important;
+}
+
+/* Accessibility: High Contrast Mode */
+.high-contrast-mode {
+  --bg-app: #000000;
+  --bg-primary: #0a0a0a;
+  --bg-card: #121212;
+  --bg-surface: #1e1e1e;
+  --text-highlight: #ffffff;
+  --text-main: #f8fafc;
+  --text-muted: #cbd5e1;
+  --text-dim: #94a3b8;
+  --border-glass: #475569;
+  --border-subtle: #334155;
+}
+
+.high-contrast-mode .app-phone-frame {
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+.high-contrast-mode .nav-tab-btn.active {
+  background: #ffffff;
+  color: #000000;
+  font-weight: 800;
+}
+
+.high-contrast-mode .status-chip,
+.high-contrast-mode .factor-card-item,
+.high-contrast-mode .sensor-tile {
+  border: 2px solid #ffffff;
+}
+
 

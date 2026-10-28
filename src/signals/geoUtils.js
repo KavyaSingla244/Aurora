@@ -107,3 +107,57 @@ export function findNearestFamiliarPlace(currentCoords, savedPlaces = []) {
     minDistanceMeters: Math.round(minDistance)
   };
 }
+
+// In-memory cache for reverse geocoding to prevent excessive network calls
+const geocodeCache = new Map();
+
+/**
+ * Reverse geocodes coordinates to a human-readable street/neighborhood address
+ * using OpenStreetMap's free Nominatim API.
+ * 
+ * @param {number} lat 
+ * @param {number} lon 
+ * @returns {Promise<string>} Human readable location string
+ */
+export async function reverseGeocodeCoords(lat, lon) {
+  if (typeof lat !== 'number' || typeof lon !== 'number') {
+    return 'Coordinates unavailable';
+  }
+
+  // Cache key rounded to ~100m precision (3 decimal places)
+  const cacheKey = `${lat.toFixed(3)},${lon.toFixed(3)}`;
+  if (geocodeCache.has(cacheKey)) {
+    return geocodeCache.get(cacheKey);
+  }
+
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+    const res = await fetch(url, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!res.ok) {
+      const fallback = `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
+      geocodeCache.set(cacheKey, fallback);
+      return fallback;
+    }
+
+    const data = await res.json();
+    const addr = data.address || {};
+    
+    // Build concise location description: road / neighborhood / suburb / city
+    const primary = addr.road || addr.pedestrian || addr.suburb || addr.neighbourhood || addr.amenity || data.name || 'Live Location';
+    const secondary = addr.city || addr.town || addr.county || addr.state || '';
+    const formatted = secondary ? `${primary}, ${secondary}` : primary;
+
+    geocodeCache.set(cacheKey, formatted);
+    return formatted;
+  } catch {
+    const fallback = `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
+    geocodeCache.set(cacheKey, fallback);
+    return fallback;
+  }
+}
+

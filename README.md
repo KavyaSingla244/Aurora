@@ -198,28 +198,43 @@ to our knowledge, no current consumer safety app implements:
   separate app or rebuilt logic. Existing apps in this space tend to
   ship one fixed feature set rather than a reusable, re-weightable core.
 
-### Planned Technical Additions
+### Implemented Real-Time Sensor & API Infrastructure
 
-- **Predictive area-risk scoring from real historical data**, incorporating
-  public incident data sources (e.g., NCRB crime statistics) as one input
-  into the composite score, rather than relying solely on personal
-  movement and familiarity signals.
-- **Ambient distress-sound detection** using a pre-trained audio
-  classification model (e.g., Google's YAMNet) to recognize sounds like
-  screaming or breaking glass as an additional passive signal, without
-  transcribing or storing any actual audio.
-- **Duress-specific biometric confirmation** — for example, an alternate
-  finger or a slightly altered spoken phrase that visually/audibly appears
-  to be a normal "I'm fine" confirmation to an onlooker, but silently
-  triggers escalation instead. This extends the existing safe-word concept
-  into biometric and voice confirmation without weakening its coercion
-  resistance.
-- **Wearable device integration**, both for confirmation gestures that
-  don't require unlocking a phone, and for physiological signals like
-  heart-rate spikes as an additional real-time stress indicator.
-- **Real backend and messaging integration** (e.g., Twilio, push
-  notifications) so Trusted Circle and SOS alerts are actually delivered
-  to another device, replacing the current UI-simulated notification flow.
-- **Official emergency dispatch integration**, contingent on partnerships
-  and access not available to an independent project — the current
-  tap-to-call flow is an interim, honest substitute for this.
+Aurora has been upgraded from a simulated concept into a production-ready application powered by real-time hardware telemetry and live cloud REST APIs:
+
+1. **Ambient Acoustic Distress Detection (Web Audio API):**
+   - Implemented in `src/signals/useAudioDistressSignal.js`.
+   - Real-time Fast Fourier Transform (FFT) analysis on microphone audio across 16 frequency bands.
+   - Computes live RMS decibels and acoustic scream ratio (1.5 kHz – 4.5 kHz) in ephemeral browser memory with zero recording, transcription, or storage.
+
+2. **Kinematic Motion & High-G Fall Detection (DeviceMotion API):**
+   - Implemented in `src/signals/useDeviceMotionSignal.js`.
+   - Continuous 3-axis accelerometer telemetry via `window.DeviceMotionEvent`.
+   - Calculates kinetic G-force magnitude ($\sqrt{x^2 + y^2 + z^2}$) to detect sudden high-G impacts (>26 m/s²) and physical falls.
+
+3. **Live Geolocation & Kinematics (W3C Geolocation + Nominatim REST):**
+   - Implemented in `src/signals/useGeolocationSignals.js` and `src/signals/geoUtils.js`.
+   - Real-time `navigator.geolocation.watchPosition` streaming speed (km/h) and stillness duration via Haversine geometry.
+   - Reverse-geocodes live coordinates into human-readable street addresses using OpenStreetMap's Nominatim REST API with in-memory caching.
+   - Interactive Leaflet OpenStreetMap rendering (`src/components/JourneyMap.jsx`) with pulsing radar markers and 500m geofence safety zones.
+
+4. **Real Environmental Weather Hazards (Open-Meteo REST API):**
+   - Implemented in `src/signals/useEnvironmentalWeatherSignal.js`.
+   - Live HTTPS requests to Open-Meteo (`api.open-meteo.com/v1/forecast`) for atmospheric visibility (meters), temperature, wind speed, and WMO storm hazard codes.
+
+5. **Discreet Voice Check-ins & Hands-Free SOS (Web Speech API):**
+   - Implemented in `src/signals/useSpeechInteraction.js`.
+   - SpeechSynthesis (TTS) verbal check-ins when risk crosses into Elevated.
+   - Web Speech Recognition (STT) continuous hands-free listener for *"Aurora Emergency"* hotphrase and natural language commands.
+
+6. **Anti-Coercion & Duress Phrase Engine:**
+   - Secret Safe Word stands down alerts; any unrecognized response immediately escalates.
+   - Silent Duress Phrase secretly dispatches emergency alerts while displaying a harmless fake confirmation UI to protect the user from an attacker.
+
+7. **Multi-Channel Emergency Dispatch & 5-Stage Telecom Pipeline:**
+   - Implemented in `src/engine/deliveryService.js` and `src/components/EmergencyDeliveryTracker.jsx`.
+   - Tracks 5-stage telecom lifecycle: `ACCEPTED` ➔ `QUEUED` ➔ `SENT` ➔ `DELIVERED` ➔ `ACKNOWLEDGED`.
+   - Real outbound HTTP POST Webhook integration (Zapier, Slack, Discord, custom servers).
+   - Real Telegram Bot REST API direct dispatch (`api.telegram.org/bot<TOKEN>/sendMessage`).
+   - Browser Web Notifications API, native Web Share API, and tap-to-SMS/WhatsApp links.
+

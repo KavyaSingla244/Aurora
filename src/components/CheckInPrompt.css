@@ -217,6 +217,33 @@
   transform: translateY(-1px);
 }
 
+.btn-checkin-voice {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+  padding: 11px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-checkin-voice:hover {
+  background: #e2e8f0;
+}
+
+.btn-checkin-voice.listening {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+  animation: livePulse 1.2s infinite;
+}
+
 /* Toast Success */
 .checkin-toast-success {
   display: flex;

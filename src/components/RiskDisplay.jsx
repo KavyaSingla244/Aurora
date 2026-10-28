@@ -1,5 +1,7 @@
 import React from 'react';
 import { useApp } from '../state/useApp';
+import VoiceAssistantBar from './VoiceAssistantBar';
+import AmbientDistressMeter from './AmbientDistressMeter';
 import './RiskDisplay.css';
 
 export default function RiskDisplay() {
@@ -11,7 +13,8 @@ export default function RiskDisplay() {
     countdown,
     isSOSActive,
     CHECKIN_MAX_ATTEMPTS,
-    signalSourcesMeta
+    signalSourcesMeta,
+    aiExplanation
   } = useApp();
 
   const { score, tier, contributingFactors } = riskAssessment;
@@ -73,6 +76,9 @@ export default function RiskDisplay() {
   return (
     <div className={`risk-guardian-container tier-${tierClass} ${isCriticalFlash ? 'critical-flash-trigger' : ''}`}>
       
+      {/* Voice Assistant Bar (Hands-free voice recognition & commands) */}
+      <VoiceAssistantBar />
+
       {/* 1. Hero Threat Radar Card */}
       <div className="guardian-radar-card">
         {/* Radar Ambient Pulse Wave */}
@@ -168,22 +174,51 @@ export default function RiskDisplay() {
         </div>
       </div>
 
-      {/* 3. Security Analysis & Active Factors Card */}
+      {/* Feature 9: Real-time Ambient Audio Distress Meter */}
+      <AmbientDistressMeter />
+
+      {/* Feature 10: Context-Aware AI Reasoning & Intelligence Breakdown */}
       <div className="security-factors-card">
         <div className="factors-card-header">
           <div className="factors-title-group">
-            <span className="factors-shield-icon">🔍</span>
-            <h4>Continuous AI Intelligence Breakdown</h4>
+            <span className="factors-shield-icon">🤖</span>
+            <div>
+              <h4>Context-Aware AI Safety Reasoning</h4>
+              <p className="ai-guardrail-subtitle">
+                Deterministic Safety Guardrails Enforced (Decisions never hallucinated)
+              </p>
+            </div>
           </div>
           <span className="factors-pill-count">{contributingFactors.length} Active Signal{contributingFactors.length !== 1 ? 's' : ''}</span>
         </div>
 
+        {/* AI Plain-Language Assessment Summary */}
+        <div className="ai-explanation-box">
+          <p className="ai-summary-text">
+            <strong>AI Assessment:</strong> {aiExplanation.summary}
+          </p>
+
+          {aiExplanation.recommendations.length > 0 && (
+            <div className="ai-recommendations-list">
+              <span className="recs-title">Situational Guidance:</span>
+              <ul>
+                {aiExplanation.recommendations.map((rec, rIdx) => (
+                  <li key={rIdx}>{rec}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Contributing Factors Breakdown */}
         <div className="factors-list">
           {contributingFactors.map((factor, index) => {
             const isCompounding = factor.includes('compounding');
             const isBattery = factor.includes('Battery') || factor.includes('battery');
             const isPace = factor.includes('pace') || factor.includes('sprint') || factor.includes('stillness');
             const isEmergency = factor.includes('CRITICAL') || factor.includes('SOS') || factor.includes('coercion');
+            const isAudio = factor.includes('distress sound') || factor.includes('scream');
+            const isMotion = factor.includes('impact') || factor.includes('fall');
             
             let factorIcon = '🟢';
             let tagLabel = 'BASELINE';
@@ -192,6 +227,14 @@ export default function RiskDisplay() {
             if (isEmergency) {
               factorIcon = '🚨';
               tagLabel = 'EMERGENCY';
+              tagClass = 'tag-emergency';
+            } else if (isAudio) {
+              factorIcon = '🎧';
+              tagLabel = 'ACOUSTIC';
+              tagClass = 'tag-emergency';
+            } else if (isMotion) {
+              factorIcon = '🏃';
+              tagLabel = 'IMPACT';
               tagClass = 'tag-emergency';
             } else if (isCompounding) {
               factorIcon = '⚡';
@@ -202,7 +245,7 @@ export default function RiskDisplay() {
               tagLabel = 'POWER';
               tagClass = 'tag-modifier';
             } else if (isPace) {
-              factorIcon = '🏃';
+              factorIcon = '🚶';
               tagLabel = 'KINEMATIC';
               tagClass = 'tag-kinematic';
             } else if (factor.includes('Night') || factor.includes('route')) {
